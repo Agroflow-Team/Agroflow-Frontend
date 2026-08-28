@@ -5,76 +5,155 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.agroflow.feature.auth.presentation.AuthViewModel
+import com.agroflow.feature.auth.presentation.LoginUiState
 
 @Composable
-fun LoginScreen() {
-    // 1. Estados (State): Aquí guardamos lo que el usuario va escribiendo
+fun LoginScreen(
+    viewModel: AuthViewModel = viewModel(),
+    onLoginSuccess: () -> Unit = {} // Nuevo parametro para navegar al tener exito
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // 2. Surface: Es el "lienzo" o fondo de nuestra pantalla
+    // Observamos el estado actual del ViewModel
+    val uiState = viewModel.uiState
+
+    // Si el estado es Success, ejecutamos la accion de exito (navegar)
+    LaunchedEffect(uiState) {
+        if (uiState is LoginUiState.Success) {
+            onLoginSuccess()
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        // 3. Column: Organiza los elementos de arriba hacia abajo
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(28.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            // Título
             Text(
-                text = "AgroFlow 🌾",
-                style = MaterialTheme.typography.headlineLarge,
+                text = "AgroFlow",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                ),
                 color = MaterialTheme.colorScheme.primary
             )
+            Text(
+                text = "Gestión agrícola inteligente",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-            Spacer(modifier = Modifier.height(32.dp)) // Espacio en blanco
+            Spacer(modifier = Modifier.height(48.dp))
 
-            // Campo de Correo
-            OutlinedTextField(
+            TextField(
                 value = email,
-                onValueChange = { email = it }, // Actualiza el estado cuando el usuario escribe
-                label = { Text("Correo electrónico") },
+                onValueChange = { email = it },
+                placeholder = { Text("Correo electrónico") },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de Contraseña
-            OutlinedTextField(
+            TextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña") },
-                visualTransformation = PasswordVisualTransformation(), // Oculta el texto con asteriscos
+                placeholder = { Text("Contraseña") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // Botón de Ingreso
+            // Mostrar mensaje de error si el estado es Error
+            if (uiState is LoginUiState.Error) {
+                Text(
+                    text = uiState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
+            // Cambiar el boton por un spinner de carga si el estado es Loading
+            if (uiState is LoginUiState.Loading) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            } else {
+                Button(
+                    onClick = { viewModel.login(email, password) },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) {
+                    Text("Iniciar Sesión", style = MaterialTheme.typography.titleMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = MaterialTheme.colorScheme.onPrimary)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(48.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), thickness = 1.dp)
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            var baseUrl by remember { mutableStateOf(com.agroflow.core.session.SessionManager.baseUrl) }
+            Text("Configuración de Servidor", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+            Spacer(modifier = Modifier.height(12.dp))
+            TextField(
+                value = baseUrl,
+                onValueChange = { baseUrl = it },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             Button(
-                onClick = { /* TODO: Aquí conectaremos el ViewModel más adelante */ },
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+                onClick = {
+                    com.agroflow.core.session.SessionManager.baseUrl = baseUrl
+                },
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                modifier = Modifier.height(44.dp)
             ) {
-                Text("Iniciar Sesión", style = MaterialTheme.typography.bodyLarge)
+                Text("Guardar URL", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = MaterialTheme.colorScheme.onSecondary)
             }
         }
-    }
-}
-
-// 4. Preview: ¡Esto le dice a Android Studio que dibuje la pantalla aquí mismo!
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    MaterialTheme {
-        LoginScreen()
     }
 }

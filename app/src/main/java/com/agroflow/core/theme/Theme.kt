@@ -10,44 +10,44 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val AppleDarkColorScheme = darkColorScheme(
+    primary = AppleGreen,
+    onPrimary = AppleBlack,
+    primaryContainer = AppleGreenDark,
+    onPrimaryContainer = AppleGreen,
+    
+    secondary = AppleBlue,
+    onSecondary = AppleTextLight,
+    secondaryContainer = AppleBlueDark,
+    onSecondaryContainer = AppleBlue,
+    
+    tertiary = ApplePurple,
+    onTertiary = AppleTextLight,
+    tertiaryContainer = ApplePurpleDark,
+    onTertiaryContainer = ApplePurple,
+    
+    background = AppleBlack,
+    onBackground = AppleTextLight,
+    
+    surface = AppleBlack,
+    onSurface = AppleTextLight,
+    
+    surfaceVariant = AppleDarkGrey,
+    onSurfaceVariant = AppleTextSecondary,
+    
+    outline = AppleBorderGrey,
+    
+    error = AppleRed,
+    onError = AppleTextLight
 )
 
 @Composable
 fun AgroFlowTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = true, // Force Dark Mode for liquid crystal effect
+    dynamicColor: Boolean = false, // Disable material you to keep the iOS look
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = AppleDarkColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
