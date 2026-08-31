@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.runtime.*
 import com.agroflow.core.theme.AgroFlowTheme
 import com.agroflow.core.session.SessionManager
+import com.agroflow.feature.auth.presentation.ui.IndexScreen
 import com.agroflow.feature.dashboard.presentation.ui.DashboardScreen
 import com.agroflow.feature.auth.presentation.ui.LoginScreen
 
@@ -28,32 +29,38 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding)
                     ) {
                         var isLoggedIn by remember { mutableStateOf(SessionManager.isLoggedIn()) }
-                        
+                        var showLoginScreen by remember { mutableStateOf(false) }
+
                         if (isLoggedIn) {
                             // Enrutamiento por rol
                             val roleId = SessionManager.roleId?.lowercase() ?: ""
-                            val isEmpleado = roleId.contains("empleado") || roleId.contains("trabajador") || roleId == "2"
-                            
+                            val isEmpleado =
+                                roleId.contains("empleado") || roleId.contains("trabajador") || roleId == "2"
+
                             if (isEmpleado) {
                                 com.agroflow.feature.empleado.presentation.ui.EmpleadoDashboardScreen(
                                     onLogout = { isLoggedIn = false }
                                 )
                             } else {
-                                DashboardScreen(
-                                    onLogout = { isLoggedIn = false }
-                                )
-                            }
-                        } else {
-                            LoginScreen(
-                                onLoginSuccess = {
-                                    isLoggedIn = true
-                                    android.widget.Toast.makeText(
-                                        this@MainActivity,
-                                        "Bienvenido a AgroFlow",
-                                        android.widget.Toast.LENGTH_LONG
-                                    ).show()
+                                if (!showLoginScreen) {
+                                    IndexScreen(
+                                        onNatigateToLogin = {
+                                            showLoginScreen = true
+                                        }
+                                    )
+                                } else {
+                                    LoginScreen(
+                                        onLoginSuccess = {
+                                            isLoggedIn = true
+                                            android.widget.Toast.makeText(
+                                                this@MainActivity,
+                                                "Bienvenido a AgroFlow",
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    )
                                 }
-                            )
+                            }
                         }
                     }
                 }
