@@ -47,6 +47,19 @@ class PersonnelViewModel : ViewModel() {
         }
     }
 
+    fun createFinca(nombre: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.personnelApi.createFinca(com.agroflow.feature.personnel.data.CreateFincaRequest(nombre))
+                if (response.isSuccessful) {
+                    loadFincas()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun loadTrabajadores(fincaId: String? = null) {
         viewModelScope.launch {
             uiState = PersonnelUiState.Loading
@@ -65,6 +78,64 @@ class PersonnelViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 uiState = PersonnelUiState.Error("Error de conexión: ${e.message}")
+            }
+        }
+    }
+
+    fun createTrabajador(fincaId: String, nombreCompleto: String, documento: String, tarifaHora: Double, correo: String, clave: String) {
+        viewModelScope.launch {
+            try {
+                val request = com.agroflow.feature.personnel.data.CreateTrabajadorRequest(fincaId, nombreCompleto, documento, tarifaHora, correo, clave)
+                val response = RetrofitClient.personnelApi.createTrabajador(request)
+                if (response.isSuccessful) {
+                    selectedFinca?.let { loadTrabajadores(it.id) }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun createUser(nombre: String, correo: String, clave: String, rolId: String) {
+        viewModelScope.launch {
+            try {
+                val request = com.agroflow.feature.auth.data.CreateUserRequest(nombre, correo, clave, rolId)
+                val response = RetrofitClient.userApi.createAgricultor(request)
+                if (response.isSuccessful) {
+                    selectedFinca?.let { loadTrabajadores(it.id) }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateTrabajador(id: String, nombreCompleto: String, documento: String, tarifaHora: Double) {
+        viewModelScope.launch {
+            try {
+                val request = com.agroflow.feature.personnel.data.UpdateTrabajadorRequest(nombreCompleto, documento, tarifaHora)
+                val response = RetrofitClient.personnelApi.updateTrabajador(id, request)
+                if (response.isSuccessful) {
+                    selectedFinca?.let { loadTrabajadores(it.id) }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun deleteTrabajador(id: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.personnelApi.deleteTrabajador(id)
+                if (response.isSuccessful) {
+                    selectedFinca?.let { loadTrabajadores(it.id) }
+                    if (selectedTrabajador?.id == id) {
+                        selectedTrabajador = null
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

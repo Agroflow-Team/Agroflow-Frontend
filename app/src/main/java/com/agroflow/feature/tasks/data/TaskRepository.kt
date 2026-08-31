@@ -39,7 +39,7 @@ class TaskRepository(private val taskDao: TaskDao) {
 
             // 2. Intentar subir al servidor inmediatamente
             try {
-                val request = UpdateProgressRequest(workerId, nuevasHoras, novedades, nuevoEstado)
+                val request = UpdateProgressRequest(workerId, nuevasHoras, novedades, null, nuevoEstado)
                 val response = RetrofitClient.taskApi.updateProgress(taskId, request)
                 if (response.isSuccessful) {
                     // 3. Si tuvo éxito, desmarcamos de pendiente

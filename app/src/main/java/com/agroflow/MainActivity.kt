@@ -14,6 +14,9 @@ import com.agroflow.core.theme.AgroFlowTheme
 import com.agroflow.core.session.SessionManager
 import com.agroflow.feature.dashboard.presentation.ui.DashboardScreen
 import com.agroflow.feature.auth.presentation.ui.LoginScreen
+import com.agroflow.feature.auth.presentation.ui.RecoverPasswordScreen
+
+enum class NavScreen { LANDING, LOGIN, RECOVER_PASSWORD, REGISTRO_CLIENTE, DASHBOARD, ADMIN_MANAGE_USERS }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,33 +30,88 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(innerPadding)
                     ) {
-                        var isLoggedIn by remember { mutableStateOf(SessionManager.isLoggedIn()) }
+                        var currentScreen by remember { 
+                            mutableStateOf(if (SessionManager.isLoggedIn()) NavScreen.DASHBOARD else NavScreen.LANDING) 
+                        }
                         
-                        if (isLoggedIn) {
-                            // Enrutamiento por rol
-                            val roleId = SessionManager.roleId?.lowercase() ?: ""
-                            val isEmpleado = roleId.contains("empleado") || roleId.contains("trabajador") || roleId == "2"
-                            
-                            if (isEmpleado) {
-                                com.agroflow.feature.empleado.presentation.ui.EmpleadoDashboardScreen(
-                                    onLogout = { isLoggedIn = false }
-                                )
-                            } else {
-                                DashboardScreen(
-                                    onLogout = { isLoggedIn = false }
+                        when (currentScreen) {
+                            NavScreen.LANDING -> {
+                                com.agroflow.feature.auth.presentation.ui.LandingScreen(
+                                    onNavigateToLogin = { currentScreen = NavScreen.LOGIN },
+                                    onNavigateToRegistroCliente = { currentScreen = NavScreen.REGISTRO_CLIENTE }
                                 )
                             }
-                        } else {
-                            LoginScreen(
-                                onLoginSuccess = {
-                                    isLoggedIn = true
-                                    android.widget.Toast.makeText(
-                                        this@MainActivity,
-                                        "Bienvenido a AgroFlow",
-                                        android.widget.Toast.LENGTH_LONG
-                                    ).show()
+                            NavScreen.REGISTRO_CLIENTE -> {
+                                com.agroflow.feature.auth.presentation.ui.RegistroClienteScreen(
+                                    onNavigateToLogin = { currentScreen = NavScreen.LOGIN }
+                                )
+                            }
+                            NavScreen.DASHBOARD -> {
+                                val roleId = SessionManager.roleId?.lowercase() ?: ""
+                                val isEmpleado = roleId == SessionManager.ROLE_TRABAJADOR.lowercase() || roleId.contains("empleado") || roleId.contains("trabajador") || roleId == "2"
+                                val isCliente = roleId == SessionManager.ROLE_CLIENTE.lowercase() || roleId.contains("cliente") || roleId == "3"
+                                val isAdmin = roleId == SessionManager.ROLE_ADMIN.lowercase()
+                                
+                                if (isAdmin) {
+                                    com.agroflow.feature.admin.presentation.ui.AdminDashboardScreen(
+                                        onNavigateToManageUsers = { currentScreen = NavScreen.ADMIN_MANAGE_USERS },
+                                        onLogout = { 
+                                            SessionManager.clearSession()
+                                            currentScreen = NavScreen.LANDING 
+                                        }
+                                    )
+                                } else if (isEmpleado) {
+                                    com.agroflow.feature.empleado.presentation.ui.EmpleadoDashboardScreen(
+                                        onLogout = { 
+                                            SessionManager.clearSession()
+                                            currentScreen = NavScreen.LANDING 
+                                        }
+                                    )
+                                } else if (isCliente) {
+                                    com.agroflow.feature.vitrina.presentation.ui.VitrinaScreen(
+                                        onLogout = { 
+                                            SessionManager.clearSession()
+                                            currentScreen = NavScreen.LANDING 
+                                        }
+                                    )
+                                } else {
+                                    DashboardScreen(
+                                        onLogout = { 
+                                            SessionManager.clearSession()
+                                            currentScreen = NavScreen.LANDING 
+                                        }
+                                    )
                                 }
-                            )
+                            }
+                            NavScreen.LOGIN -> {
+                                LoginScreen(
+                                    onLoginSuccess = {
+                                        currentScreen = NavScreen.DASHBOARD
+                                        android.widget.Toast.makeText(
+                                            this@MainActivity,
+                                            "Bienvenido a AgroFlow",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    },
+                                    onRecoverPasswordClick = {
+                                        currentScreen = NavScreen.RECOVER_PASSWORD
+                                    }
+                                )
+                            }
+                            NavScreen.RECOVER_PASSWORD -> {
+                                RecoverPasswordScreen(
+                                    onBackToLogin = {
+                                        currentScreen = NavScreen.LOGIN
+                                    }
+                                )
+                            }
+                            NavScreen.ADMIN_MANAGE_USERS -> {
+                                com.agroflow.feature.admin.presentation.ui.AdminManageUsersScreen(
+                                    onBack = {
+                                        currentScreen = NavScreen.DASHBOARD
+                                    }
+                                )
+                            }
                         }
                     }
                 }

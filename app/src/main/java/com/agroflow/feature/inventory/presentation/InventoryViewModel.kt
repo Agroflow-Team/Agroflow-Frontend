@@ -101,4 +101,22 @@ class InventoryViewModel : ViewModel() {
             }
         }
     }
+
+    fun deleteItem(fincaId: String, itemId: String, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            uiState = InventoryUiState.Loading
+            try {
+                val response = RetrofitClient.inventoryApi.deleteItem(itemId)
+                if (response.isSuccessful) {
+                    uiState = InventoryUiState.Success
+                    loadInventory(fincaId)
+                    onComplete()
+                } else {
+                    uiState = InventoryUiState.Error("Error al eliminar ítem: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                uiState = InventoryUiState.Error("Error de conexión: ${e.message}")
+            }
+        }
+    }
 }

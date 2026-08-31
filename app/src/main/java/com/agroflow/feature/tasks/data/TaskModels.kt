@@ -17,6 +17,7 @@ data class Task(
     val horasReales: Double? = null,
     val estado: TaskStatus = TaskStatus.PENDIENTE,
     val novedades: String? = null,
+    val severidadNovedad: String? = null,
     val eliminado: Boolean = false,
     val estadoSincronizacion: String = "PENDIENTE"
 )
@@ -34,5 +35,6 @@ data class UpdateProgressRequest(
     val trabajadorId: String,
     val nuevasHoras: Double,
     val novedades: String,
+    val severidadNovedad: String? = null,
     val nuevoEstado: TaskStatus
 )

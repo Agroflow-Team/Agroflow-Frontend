@@ -55,4 +55,20 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
+
+    fun registerCliente(nombre: String, correo: String, clave: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val request = com.agroflow.feature.auth.data.CreateUserRequest(nombre, correo, clave, com.agroflow.core.session.SessionManager.ROLE_CLIENTE)
+                val response = RetrofitClient.userApi.createCliente(request)
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onError("Error al registrar: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                onError("Error de conexión: ${e.message}")
+            }
+        }
+    }
 }

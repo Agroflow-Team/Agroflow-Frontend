@@ -39,6 +39,9 @@ class EmpleadoViewModel(application: Application) : AndroidViewModel(application
     var currentFincaId by mutableStateOf<String?>(null)
         private set
 
+    var tarifaHora by mutableStateOf(0.0)
+        private set
+
     fun loadTasks() {
         val workerId = SessionManager.userId ?: return
         viewModelScope.launch {
@@ -47,7 +50,23 @@ class EmpleadoViewModel(application: Application) : AndroidViewModel(application
             totalHorasTrabajadas = tasks.filter { it.estado == TaskStatus.COMPLETADA }
                 .sumOf { it.horasReales ?: 0.0 }
                 
-            val tarifaHora = 5000.0 
+            try {
+                val summaryResponse = com.agroflow.core.RetrofitClient.personnelApi.getTrabajadorSummary(workerId)
+                if (summaryResponse.isSuccessful) {
+                    summaryResponse.body()?.let { summary ->
+                        tarifaHora = summary.tarifaHora
+                    }
+                } else {
+                    val response = com.agroflow.core.RetrofitClient.personnelApi.getTrabajadores()
+                    if (response.isSuccessful) {
+                        val trabajador = response.body()?.find { it.usuarioId == workerId || it.id == workerId }
+                        tarifaHora = trabajador?.tarifaHora ?: 0.0
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            
             salarioEstimado = totalHorasTrabajadas * tarifaHora
             
             // Obtener fincaId: primero de las tareas, si no hay, del API de fincas
@@ -76,9 +95,21 @@ class EmpleadoViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun updateTaskProgress(taskId: String, nuevasHoras: Double, novedades: String, estado: TaskStatus, onComplete: () -> Unit) {
+    fun updateTaskProgress(taskId: String, nuevasHoras: Double, novedades: String, severidad: String?, estado: TaskStatus, onComplete: () -> Unit) {
         val workerId = SessionManager.userId ?: return
         viewModelScope.launch {
+            val req = com.agroflow.feature.tasks.data.UpdateProgressRequest(
+                trabajadorId = workerId,
+                nuevasHoras = nuevasHoras,
+                novedades = novedades,
+                severidadNovedad = severidad,
+                nuevoEstado = estado
+            )
+            // Ideally we'd hit retrofit client here too for sync.
+            try {
+                com.agroflow.core.RetrofitClient.taskApi.updateProgress(taskId, req)
+            } catch (e: Exception) { }
+
             taskRepository.updateTaskStatus(taskId, workerId, nuevasHoras, novedades, estado)
             loadTasks()
             onComplete()

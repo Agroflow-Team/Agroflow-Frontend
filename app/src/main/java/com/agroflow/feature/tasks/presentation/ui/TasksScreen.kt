@@ -40,6 +40,29 @@ fun StatusBadge(status: TaskStatus) {
 }
 
 @Composable
+fun SeverityBadge(severity: String) {
+    val (bgColor, textColor, label) = when (severity.uppercase()) {
+        "BAJO" -> Triple(androidx.compose.ui.graphics.Color(0xFF143F24), androidx.compose.ui.graphics.Color(0xFF30D158), "Bajo")
+        "MEDIO" -> Triple(androidx.compose.ui.graphics.Color(0xFF3A2D0F), androidx.compose.ui.graphics.Color(0xFFFFD60A), "Medio")
+        "ALTO" -> Triple(androidx.compose.ui.graphics.Color(0xFF3A1E1E), androidx.compose.ui.graphics.Color(0xFFFF453A), "Alto")
+        else -> Triple(androidx.compose.ui.graphics.Color(0xFF2C2C2E), androidx.compose.ui.graphics.Color(0xFF8E8E93), severity)
+    }
+
+    Surface(
+        color = bgColor,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        modifier = androidx.compose.ui.Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
+    ) {
+        Text(
+            text = label,
+            color = textColor,
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+            modifier = androidx.compose.ui.Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
 fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewModel = viewModel()) {
     val trabajador = personnelViewModel.selectedTrabajador
 
@@ -110,7 +133,12 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
                         Column(modifier = Modifier.padding(16.dp).weight(1f)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Text(task.titulo, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
-                                StatusBadge(task.estado)
+                                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                    if (task.severidadNovedad != null) {
+                                        SeverityBadge(task.severidadNovedad)
+                                    }
+                                    StatusBadge(task.estado)
+                                }
                             }
                             Spacer(Modifier.height(6.dp))
                             Text(task.descripcion, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

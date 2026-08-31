@@ -43,10 +43,22 @@ fun DashboardScreen(
                     onClick = { selectedTab = 2 }
                 )
                 NavigationBarItem(
-                    icon = { Text("⚙️") },
-                    label = { Text("Perfil") },
+                    icon = { Text("💰") },
+                    label = { Text("Finanzas") },
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 }
+                )
+                NavigationBarItem(
+                    icon = { Text("🛒") },
+                    label = { Text("Vitrina") },
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 }
+                )
+                NavigationBarItem(
+                    icon = { Text("⚙️") },
+                    label = { Text("Perfil") },
+                    selected = selectedTab == 5,
+                    onClick = { selectedTab = 5 }
                 )
             }
         }
@@ -56,7 +68,9 @@ fun DashboardScreen(
                 0 -> PersonnelScreen(personnelViewModel)
                 1 -> TasksScreen(personnelViewModel)
                 2 -> InventoryScreen(personnelViewModel)
-                3 -> ProfileScreen(onLogout)
+                3 -> com.agroflow.feature.finance.presentation.ui.FinanceScreen(personnelViewModel)
+                4 -> com.agroflow.feature.vitrina.presentation.ui.MisPublicacionesScreen()
+                5 -> ProfileScreen(onLogout)
             }
         }
     }
