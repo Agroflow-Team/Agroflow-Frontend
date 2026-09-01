@@ -9,6 +9,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agroflow.core.session.SessionManager
 import com.agroflow.feature.empleado.presentation.EmpleadoViewModel
@@ -156,12 +158,23 @@ fun EmpleadoDashboardScreen(
                 // INSUMOS
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Text("Insumos de la Finca", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
-                    Button(
-                        onClick = { showAddInsumo = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
-                    ) {
-                        Text("Añadir", color = MaterialTheme.colorScheme.onPrimary)
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        IconButton(onClick = { 
+                            viewModel.currentFincaId?.let { viewModel.loadInventory(it) }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh, 
+                                contentDescription = "Sincronizar",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Button(
+                            onClick = { showAddInsumo = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+                        ) {
+                            Text("Añadir", color = MaterialTheme.colorScheme.onPrimary)
+                        }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
