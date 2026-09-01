@@ -19,3 +19,7 @@ val ApplePurpleDark = Color(0xFF4C1864)
 val AppleRed = Color(0xFFFF453A)
 val AppleTextLight = Color(0xFFFFFFFF)
 val AppleTextSecondary = Color(0xFF8E8E93)
+
+val AgroFlowBackground = Color(0xFFF3EFE7)
+val AgroFlowGreen = Color(0xFF2C7A4B)
+val AgroFlowSurface = Color(0xFFFFFFFF)

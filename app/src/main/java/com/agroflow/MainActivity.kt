@@ -32,34 +32,38 @@ class MainActivity : ComponentActivity() {
                         var showLoginScreen by remember { mutableStateOf(false) }
 
                         if (isLoggedIn) {
-                            // Enrutamiento por rol
+                            // SI ESTÁ LOGUEADO: Va a los Dashboards
                             val roleId = SessionManager.roleId?.lowercase() ?: ""
-                            val isEmpleado =
-                                roleId.contains("empleado") || roleId.contains("trabajador") || roleId == "2"
+                            val isEmpleado = roleId.contains("empleado") || roleId.contains("trabajador") || roleId == "2"
 
                             if (isEmpleado) {
                                 com.agroflow.feature.empleado.presentation.ui.EmpleadoDashboardScreen(
                                     onLogout = { isLoggedIn = false }
                                 )
                             } else {
-                                if (!showLoginScreen) {
-                                    IndexScreen(
-                                        onNatigateToLogin = {
-                                            showLoginScreen = true
-                                        }
-                                    )
-                                } else {
-                                    LoginScreen(
-                                        onLoginSuccess = {
-                                            isLoggedIn = true
-                                            android.widget.Toast.makeText(
-                                                this@MainActivity,
-                                                "Bienvenido a AgroFlow",
-                                                android.widget.Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    )
-                                }
+                                DashboardScreen(
+                                    onLogout = { isLoggedIn = false }
+                                )
+                            }
+                        } else {
+                            // SI NO ESTÁ LOGUEADO: Entra aquí y muestra el Index o Login
+                            if (!showLoginScreen) {
+                                IndexScreen(
+                                    onNatigateToLogin = {
+                                        showLoginScreen = true
+                                    }
+                                )
+                            } else {
+                                LoginScreen(
+                                    onLoginSuccess = {
+                                        isLoggedIn = true
+                                        android.widget.Toast.makeText(
+                                            this@MainActivity,
+                                            "Bienvenido a AgroFlow",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                )
                             }
                         }
                     }

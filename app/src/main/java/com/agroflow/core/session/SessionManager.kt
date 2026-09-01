@@ -12,7 +12,7 @@ object SessionManager {
     var fincaId by mutableStateOf<String?>(null)
     
     // Configurable base URL for testing
-    var baseUrl by mutableStateOf("http://192.168.0.190:8080/")
+    var baseUrl by mutableStateOf("http://192.168.0.143:8080/")
 
     fun saveSession(userId: String, email: String, roleId: String, token: String) {
         this.userId = userId

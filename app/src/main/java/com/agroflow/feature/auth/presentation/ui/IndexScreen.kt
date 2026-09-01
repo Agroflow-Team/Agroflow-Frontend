@@ -1,6 +1,5 @@
 package com.agroflow.feature.auth.presentation.ui
 
-import android.view.Surface
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -82,7 +81,7 @@ fun IndexScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            val pagerState = rememberPagerState(pageCount = { 3 })
+            val pagerState = rememberPagerState(pageCount = { 9 })
 
             HorizontalPager(
                 state = pagerState,
@@ -103,7 +102,7 @@ fun IndexScreen(
                     .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.Center
             ){
-                repeat(3) {iteration ->
+                repeat(9) {iteration ->
                     val color = if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.primary else Color.LightGray
                     Box(
                         modifier = Modifier
@@ -147,26 +146,47 @@ fun IndexScreen(
 @Composable
 fun CarouselItem(page: Int){
 
-    val (title, color) = when (page) {
-        0 -> "Gestión Eficiente" to Color(0xFF27E60)
-        1 -> "Control de Personal" to Color(0xFF2980B9)
-        else -> "Catálogo Digital" to Color(0xFFD35400)
+    val (title, imageRes) = when (page) {
+        0 -> "" to R.drawable.campo
+        1 -> "" to R.drawable.campito
+        2 -> "" to R.drawable.campos
+        3 -> "" to R.drawable.arandanos
+        4 -> "" to R.drawable.cebollas
+        5 -> "" to R.drawable.moras
+        6 -> "" to R.drawable.papa
+        7 -> "" to R.drawable.papa_criolla
+        8 -> "" to R.drawable.tomates
+        else -> "" to R.drawable.zanahorias
     }
 
     Card(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 24.dp),
-        colors = CardDefaults.cardColors(containerColor = color),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ){
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()){
+        Box(modifier = Modifier.fillMaxSize()){
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = title,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
+            )
+
             Text(
                 text = title,
                 color = Color.White,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.align(Alignment.Center)
             )
         }
     }
