@@ -5,9 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agroflow.core.theme.AppleDarkGrey
 import com.agroflow.core.theme.AppleGreen
@@ -64,10 +63,8 @@ fun VitrinaScreen(
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                androidx.compose.foundation.lazy.LazyColumn(
                     contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -92,50 +89,60 @@ fun PublicacionItem(pub: Publicacion, context: Context) {
     val extractedLocation = locationMatch?.groupValues?.get(1)?.trim()
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = AppleDarkGrey)
     ) {
         Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp)
-                    .background(Color(0xFF2C2C2E)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🌾 Imagen", color = Color.White, style = MaterialTheme.typography.titleMedium)
+            if (!pub.imagenUrl.isNullOrBlank()) {
+                coil.compose.AsyncImage(
+                    model = pub.imagenUrl,
+                    contentDescription = "Imagen del producto",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .background(Color(0xFF2C2C2E)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("🌾 Sin Imagen", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                }
             }
 
-            Column(modifier = Modifier.padding(14.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = pub.tituloProducto,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "$${pub.precio}",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    text = "\$${pub.precio}",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     color = AppleGreen
                 )
                 Text(
                     text = "Disponibles: ${pub.cantidadDisponible}",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = Color.LightGray
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Texto corregido para evitar nulos y con la coma faltante
                 Text(
                     text = desc,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.85f)
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = {
@@ -152,14 +159,14 @@ fun PublicacionItem(pub: Publicacion, context: Context) {
                             // ignore
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AppleGreen)
                 ) {
-                    Text("💬 WhatsApp", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("💬 WhatsApp", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 val mapQuery = when {
                     pub.latitud != null && pub.longitud != null -> "${pub.latitud},${pub.longitud}"
@@ -169,7 +176,12 @@ fun PublicacionItem(pub: Publicacion, context: Context) {
 
                 OutlinedButton(
                     onClick = {
-                        val mapUri = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encode(mapQuery)}")
+                        val isLink = mapQuery.startsWith("http", ignoreCase = true)
+                        val mapUri = if (isLink) {
+                            Uri.parse(mapQuery)
+                        } else {
+                            Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encode(mapQuery)}")
+                        }
                         val mapIntent = Intent(Intent.ACTION_VIEW, mapUri)
                         try {
                             context.startActivity(mapIntent)
@@ -178,11 +190,10 @@ fun PublicacionItem(pub: Publicacion, context: Context) {
                         }
                     },
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
-                    Text("📍 Google Maps", color = Color.White)
+                    Text("📍 Google Maps", color = Color.White, fontSize = 16.sp)
                 }
-            }
             }
         }
     }

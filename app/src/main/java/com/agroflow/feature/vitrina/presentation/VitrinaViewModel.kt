@@ -84,4 +84,36 @@ class VitrinaViewModel : ViewModel() {
             }
         }
     }
+
+    fun updatePublicacion(id: String, request: CreatePublicacionRequest, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                apiService.updatePublicacion(id, request)
+                loadMisPublicaciones(request.fincaId)
+                onSuccess()
+            } catch (e: Exception) {
+                _error.value = "Error al editar publicación: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun deletePublicacion(id: String, fincaId: String, onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                apiService.deletePublicacion(id)
+                loadMisPublicaciones(fincaId)
+                onSuccess()
+            } catch (e: Exception) {
+                _error.value = "Error al eliminar publicación: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 }

@@ -24,6 +24,10 @@ class AuthViewModel : ViewModel() {
     var uiState by mutableStateOf<LoginUiState>(LoginUiState.Idle)
         private set
 
+    fun resetState() {
+        uiState = LoginUiState.Idle
+    }
+
     fun login(correo: String, clave: String) {
         viewModelScope.launch {
             uiState = LoginUiState.Loading // Cambiamos la UI a "Cargando"

@@ -12,12 +12,13 @@ class OfflineSyncWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            // Simulating background sync
-            Log.d("OfflineSyncWorker", "Simulating background sync")
-            // Normally you would fetch pending tasks from TaskDao here:
-            // val taskDao = DatabaseProvider.getDatabase(applicationContext).taskDao()
-            // val pendingTasks = taskDao.getPendingSyncTasks()
-            // And then push them to the backend API...
+            Log.d("OfflineSyncWorker", "Iniciando sincronizacion en segundo plano...")
+            val db = com.agroflow.core.db.DatabaseProvider.getDatabase(applicationContext)
+            val inventoryRepository = com.agroflow.feature.inventory.data.InventoryRepository(db.inventoryDao())
+            
+            // Sincronizar todos los items pendientes de inventario
+            inventoryRepository.syncPendingItems()
+            Log.d("OfflineSyncWorker", "Sincronizacion completada con exito")
             
             Result.success()
         } catch (e: Exception) {

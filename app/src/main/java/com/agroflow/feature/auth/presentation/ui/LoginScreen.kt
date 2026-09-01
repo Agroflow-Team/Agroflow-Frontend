@@ -34,6 +34,7 @@ fun LoginScreen(
     // Si el estado es Success, ejecutamos la accion de exito (navegar)
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
+            viewModel.resetState()
             onLoginSuccess()
         }
     }

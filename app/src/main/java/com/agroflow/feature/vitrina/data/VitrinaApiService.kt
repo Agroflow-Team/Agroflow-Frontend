@@ -17,4 +17,13 @@ interface VitrinaApiService {
         @Path("id") id: String,
         @Body request: UpdateEstadoRequest
     ): Publicacion
+
+    @PUT("api/vitrina/{id}")
+    suspend fun updatePublicacion(
+        @Path("id") id: String,
+        @Body request: CreatePublicacionRequest
+    ): Publicacion
+
+    @DELETE("api/vitrina/{id}")
+    suspend fun deletePublicacion(@Path("id") id: String)
 }

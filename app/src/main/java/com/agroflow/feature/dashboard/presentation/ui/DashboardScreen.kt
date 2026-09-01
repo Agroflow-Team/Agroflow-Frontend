@@ -69,7 +69,7 @@ fun DashboardScreen(
                 1 -> TasksScreen(personnelViewModel)
                 2 -> InventoryScreen(personnelViewModel)
                 3 -> com.agroflow.feature.finance.presentation.ui.FinanceScreen(personnelViewModel)
-                4 -> com.agroflow.feature.vitrina.presentation.ui.MisPublicacionesScreen()
+                4 -> com.agroflow.feature.vitrina.presentation.ui.MisPublicacionesScreen(personnelViewModel)
                 5 -> ProfileScreen(onLogout)
             }
         }

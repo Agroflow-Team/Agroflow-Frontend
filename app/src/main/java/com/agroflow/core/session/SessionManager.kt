@@ -16,7 +16,7 @@ object SessionManager {
     const val ROLE_CLIENTE = "a42f1efb-78bd-45e4-8a95-7b1c863663bf"
 
     // Configurable base URL for testing
-    var baseUrl by mutableStateOf("http://192.168.0.190:8080/")
+    var baseUrl by mutableStateOf("https://agroflow-backend-1.onrender.com/")
 
     fun saveSession(userId: String, email: String, roleId: String, token: String) {
         this.userId = userId
@@ -32,6 +32,7 @@ object SessionManager {
         token = null
         fincaId = null
     }
+
 
     fun isLoggedIn(): Boolean {
         return token != null

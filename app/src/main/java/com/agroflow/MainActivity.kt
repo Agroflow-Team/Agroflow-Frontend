@@ -33,6 +33,14 @@ class MainActivity : ComponentActivity() {
                         var currentScreen by remember { 
                             mutableStateOf(if (SessionManager.isLoggedIn()) NavScreen.DASHBOARD else NavScreen.LANDING) 
                         }
+
+                        // Force navigate to LANDING when session is cleared
+                        val isLoggedIn = SessionManager.isLoggedIn()
+                        LaunchedEffect(isLoggedIn) {
+                            if (!isLoggedIn && currentScreen != NavScreen.LANDING && currentScreen != NavScreen.LOGIN && currentScreen != NavScreen.REGISTRO_CLIENTE && currentScreen != NavScreen.RECOVER_PASSWORD) {
+                                currentScreen = NavScreen.LANDING
+                            }
+                        }
                         
                         when (currentScreen) {
                             NavScreen.LANDING -> {
@@ -57,28 +65,40 @@ class MainActivity : ComponentActivity() {
                                         onNavigateToManageUsers = { currentScreen = NavScreen.ADMIN_MANAGE_USERS },
                                         onLogout = { 
                                             SessionManager.clearSession()
-                                            currentScreen = NavScreen.LANDING 
+                                            val intent = android.content.Intent(this@MainActivity, MainActivity::class.java)
+                                            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                            startActivity(intent)
+                                            finish()
                                         }
                                     )
                                 } else if (isEmpleado) {
                                     com.agroflow.feature.empleado.presentation.ui.EmpleadoDashboardScreen(
                                         onLogout = { 
                                             SessionManager.clearSession()
-                                            currentScreen = NavScreen.LANDING 
+                                            val intent = android.content.Intent(this@MainActivity, MainActivity::class.java)
+                                            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                            startActivity(intent)
+                                            finish()
                                         }
                                     )
                                 } else if (isCliente) {
                                     com.agroflow.feature.vitrina.presentation.ui.VitrinaScreen(
                                         onLogout = { 
                                             SessionManager.clearSession()
-                                            currentScreen = NavScreen.LANDING 
+                                            val intent = android.content.Intent(this@MainActivity, MainActivity::class.java)
+                                            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                            startActivity(intent)
+                                            finish()
                                         }
                                     )
                                 } else {
                                     DashboardScreen(
                                         onLogout = { 
                                             SessionManager.clearSession()
-                                            currentScreen = NavScreen.LANDING 
+                                            val intent = android.content.Intent(this@MainActivity, MainActivity::class.java)
+                                            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                            startActivity(intent)
+                                            finish()
                                         }
                                     )
                                 }
