@@ -158,7 +158,6 @@ fun CarouselItem(page: Int){
         5 -> "" to R.drawable.moras
         6 -> "" to R.drawable.papa
         7 -> "" to R.drawable.papa_criolla
-        8 -> "" to R.drawable.tomates
         else -> "" to R.drawable.zanahorias
     }
 
