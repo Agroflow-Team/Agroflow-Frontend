@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.agroflow.core.RetrofitClient
 import com.agroflow.feature.auth.data.LoginRequest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 // Definimos los posibles estados de la pantalla
 sealed class LoginUiState {
@@ -30,11 +31,20 @@ class AuthViewModel : ViewModel() {
 
     fun login(correo: String, clave: String) {
         viewModelScope.launch {
-            uiState = LoginUiState.Loading // Cambiamos la UI a "Cargando"
+            uiState = LoginUiState.Loading
             Log.d("AgroFlowLogin", "Intentando enviar peticion a Spring Boot...")
 
             try {
-                val request = LoginRequest(correo, clave)
+                // Get FCM Token before login
+                var fcmToken: String? = null
+                try {
+                    val tokenResult = kotlinx.coroutines.tasks.await(com.google.firebase.messaging.FirebaseMessaging.getInstance().token)
+                    fcmToken = tokenResult
+                } catch (e: Exception) {
+                    Log.e("AgroFlowLogin", "Error obteniendo FCM token: ${e.message}")
+                }
+
+                val request = LoginRequest(correo, clave, fcmToken)
                 val response = RetrofitClient.api.login(request)
 
                 if (response.isSuccessful) {
@@ -48,7 +58,7 @@ class AuthViewModel : ViewModel() {
                             token = body.token
                         )
                     }
-                    uiState = LoginUiState.Success // Cambiamos la UI a "Exito"
+                    uiState = LoginUiState.Success
                 } else {
                     Log.e("AgroFlowLogin", "Error del servidor: ${response.code()}")
                     uiState = LoginUiState.Error("Credenciales incorrectas o error del servidor")

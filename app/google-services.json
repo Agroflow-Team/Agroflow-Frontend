@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "60088499574",
+    "project_id": "agroflow-fd7fc",
+    "storage_bucket": "agroflow-fd7fc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:60088499574:android:7142142e6bb44b57164e57",
+        "android_client_info": {
+          "package_name": "com.agroflow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJdJ-y7gXbmOZd-ui536QOVU5e67LsKtg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
