@@ -45,27 +45,27 @@ class EmpleadoViewModel(application: Application) : AndroidViewModel(application
     fun loadTasks() {
         val workerId = SessionManager.userId ?: return
         viewModelScope.launch {
-            tasks = taskRepository.getTasksByWorker(workerId)
+            var actualTrabajadorId = workerId
             
-            totalHorasTrabajadas = tasks.filter { it.estado == TaskStatus.COMPLETADA }
-                .sumOf { it.horasReales ?: 0.0 }
-                
+            // 1. Obtener el verdadero ID del trabajador (usando el usuarioId)
             try {
-                val summaryResponse = com.agroflow.core.RetrofitClient.personnelApi.getTrabajadorSummary(workerId)
-                if (summaryResponse.isSuccessful) {
-                    summaryResponse.body()?.let { summary ->
-                        tarifaHora = summary.tarifaHora
-                    }
-                } else {
-                    val response = com.agroflow.core.RetrofitClient.personnelApi.getTrabajadores()
-                    if (response.isSuccessful) {
-                        val trabajador = response.body()?.find { it.usuarioId == workerId || it.id == workerId }
-                        tarifaHora = trabajador?.tarifaHora ?: 0.0
+                val response = com.agroflow.core.RetrofitClient.personnelApi.getTrabajadores()
+                if (response.isSuccessful) {
+                    val trabajador = response.body()?.find { it.usuarioId == workerId || it.id == workerId }
+                    if (trabajador != null) {
+                        actualTrabajadorId = trabajador.id
+                        tarifaHora = trabajador.tarifaHora
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+
+            // 2. Ahora sí, cargar las tareas usando el ID correcto
+            tasks = taskRepository.getTasksByWorker(actualTrabajadorId)
+            
+            totalHorasTrabajadas = tasks.filter { it.estado == TaskStatus.COMPLETADA }
+                .sumOf { it.horasReales ?: 0.0 }
             
             salarioEstimado = totalHorasTrabajadas * tarifaHora
             
