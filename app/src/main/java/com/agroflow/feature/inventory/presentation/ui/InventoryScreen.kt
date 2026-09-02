@@ -30,6 +30,7 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
 
     var showCreateDialog by remember { mutableStateOf(false) }
     var itemToEdit by remember { mutableStateOf<com.agroflow.feature.inventory.data.InventoryItem?>(null) }
+    var itemToDelete by remember { mutableStateOf<com.agroflow.feature.inventory.data.InventoryItem?>(null) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         if (finca == null) {
@@ -113,12 +114,22 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            TextButton(
-                                onClick = { itemToEdit = item },
-                                contentPadding = PaddingValues(0.dp),
-                                modifier = Modifier.height(30.dp)
-                            ) {
-                                Text("Editar", color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium))
+                            Row {
+                                TextButton(
+                                    onClick = { itemToEdit = item },
+                                    contentPadding = PaddingValues(0.dp),
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text("Editar", color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium))
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                TextButton(
+                                    onClick = { itemToDelete = item },
+                                    contentPadding = PaddingValues(0.dp),
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text("Eliminar", color = androidx.compose.ui.graphics.Color(0xFFFF453A), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium))
+                                }
                             }
                         }
                     }
@@ -309,4 +320,35 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
                 }
             }
         )
-    }    }
+    }
+
+    if (itemToDelete != null && finca != null) {
+        AlertDialog(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            onDismissRequest = { itemToDelete = null },
+            title = { Text("Eliminar Ítem", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)) },
+            text = { Text("¿Estás seguro de eliminar '${itemToDelete!!.nombreItem}' del inventario?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        itemToDelete?.id?.let { itemId ->
+                            inventoryViewModel.deleteItem(finca.id, itemId) {
+                                itemToDelete = null
+                            }
+                        }
+                    },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFFFF453A))
+                ) {
+                    Text("Eliminar", color = androidx.compose.ui.graphics.Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { itemToDelete = null }) {
+                    Text("Cancelar", color = MaterialTheme.colorScheme.secondary)
+                }
+            }
+        )
+    }
+}

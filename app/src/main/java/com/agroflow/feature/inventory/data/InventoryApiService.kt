@@ -25,4 +25,9 @@ interface InventoryApiService {
         @Path("itemId") itemId: String,
         @Body request: UpdateInventoryItemRequest
     ): Response<InventoryItem>
+
+    @retrofit2.http.DELETE("api/inventory/{itemId}")
+    suspend fun deleteItem(
+        @Path("itemId") itemId: String
+    ): Response<Void>
 }

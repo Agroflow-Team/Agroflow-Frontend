@@ -1,6 +1,7 @@
 package com.agroflow.feature.empleado.presentation.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,6 +9,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agroflow.core.session.SessionManager
 import com.agroflow.feature.empleado.presentation.EmpleadoViewModel
@@ -111,7 +114,25 @@ fun EmpleadoDashboardScreen(
                                 Column(modifier = Modifier.padding(16.dp).weight(1f)) {
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                         Text(task.titulo, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
-                                        StatusBadge(task.estado)
+                                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                            if (task.severidadNovedad != null) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .padding(end = 6.dp)
+                                                        .size(10.dp)
+                                                        .background(
+                                                            color = when(task.severidadNovedad.uppercase()) {
+                                                                "BAJO" -> androidx.compose.ui.graphics.Color(0xFF30D158)
+                                                                "MEDIO" -> androidx.compose.ui.graphics.Color(0xFFFFD60A)
+                                                                "ALTO" -> androidx.compose.ui.graphics.Color(0xFFFF453A)
+                                                                else -> androidx.compose.ui.graphics.Color.Gray
+                                                            },
+                                                            shape = androidx.compose.foundation.shape.CircleShape
+                                                        )
+                                                )
+                                            }
+                                            StatusBadge(task.estado)
+                                        }
                                     }
                                     Spacer(Modifier.height(6.dp))
                                     Text("Horas Reportadas: ${task.horasReales ?: 0.0}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -137,12 +158,23 @@ fun EmpleadoDashboardScreen(
                 // INSUMOS
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Text("Insumos de la Finca", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
-                    Button(
-                        onClick = { showAddInsumo = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
-                    ) {
-                        Text("Añadir", color = MaterialTheme.colorScheme.onPrimary)
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        IconButton(onClick = { 
+                            viewModel.currentFincaId?.let { viewModel.loadInventory(it) }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh, 
+                                contentDescription = "Sincronizar",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Button(
+                            onClick = { showAddInsumo = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+                        ) {
+                            Text("Añadir", color = MaterialTheme.colorScheme.onPrimary)
+                        }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -224,6 +256,7 @@ fun EmpleadoDashboardScreen(
     if (selectedTaskToUpdate != null) {
         var nuevasHoras by remember { mutableStateOf(selectedTaskToUpdate!!.horasReales?.toString() ?: "0.0") }
         var novedades by remember { mutableStateOf(selectedTaskToUpdate!!.novedades ?: "") }
+        var severidadSeleccionada by remember { mutableStateOf(selectedTaskToUpdate!!.severidadNovedad) }
         var estadoSeleccionado by remember { mutableStateOf(selectedTaskToUpdate!!.estado) }
 
         AlertDialog(
@@ -263,6 +296,42 @@ fun EmpleadoDashboardScreen(
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Spacer(Modifier.height(12.dp))
+                    Text("Severidad Novedad:", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        val severities = listOf("Ninguno" to null, "Bajo" to "BAJO", "Medio" to "MEDIO", "Alto" to "ALTO")
+                        severities.forEach { (label, value) ->
+                            val isSelected = severidadSeleccionada == value
+                            val bgColor = if (isSelected) {
+                                when(value) {
+                                    "BAJO" -> androidx.compose.ui.graphics.Color(0xFF143F24)
+                                    "MEDIO" -> androidx.compose.ui.graphics.Color(0xFF3A2D0F)
+                                    "ALTO" -> androidx.compose.ui.graphics.Color(0xFF3A1E1E)
+                                    else -> MaterialTheme.colorScheme.primaryContainer
+                                }
+                            } else MaterialTheme.colorScheme.surfaceVariant
+
+                            val textColor = if (isSelected) {
+                                when(value) {
+                                    "BAJO" -> androidx.compose.ui.graphics.Color(0xFF30D158)
+                                    "MEDIO" -> androidx.compose.ui.graphics.Color(0xFFFFD60A)
+                                    "ALTO" -> androidx.compose.ui.graphics.Color(0xFFFF453A)
+                                    else -> MaterialTheme.colorScheme.onPrimaryContainer
+                                }
+                            } else MaterialTheme.colorScheme.onSurfaceVariant
+
+                            Surface(
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                                color = bgColor,
+                                modifier = Modifier
+                                    .clickable { severidadSeleccionada = value }
+                                    .padding(end = 4.dp)
+                            ) {
+                                Text(label, color = textColor, modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
                     Spacer(Modifier.height(16.dp))
                     Text("Estado de la tarea:", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(8.dp))
@@ -285,6 +354,7 @@ fun EmpleadoDashboardScreen(
                             taskId = selectedTaskToUpdate!!.id!!,
                             nuevasHoras = nuevasHoras.toDoubleOrNull() ?: 0.0,
                             novedades = novedades,
+                            severidad = severidadSeleccionada,
                             estado = estadoSeleccionado
                         ) {
                             selectedTaskToUpdate = null
@@ -293,7 +363,7 @@ fun EmpleadoDashboardScreen(
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Guardar (Sync local)", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
                 }
             },
             dismissButton = {

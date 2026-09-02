@@ -12,11 +12,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agroflow.feature.auth.presentation.AuthViewModel
 import com.agroflow.feature.auth.presentation.LoginUiState
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import com.agroflow.R
 
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = viewModel(),
-    onLoginSuccess: () -> Unit = {} // Nuevo parametro para navegar al tener exito
+    onLoginSuccess: () -> Unit = {}, // Nuevo parametro para navegar al tener exito
+    onRecoverPasswordClick: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -27,6 +34,7 @@ fun LoginScreen(
     // Si el estado es Success, ejecutamos la accion de exito (navegar)
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
+            viewModel.resetState()
             onLoginSuccess()
         }
     }
@@ -42,6 +50,17 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.img_logo),
+                contentDescription = "AgroFlow Logo",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
             Text(
                 text = "AgroFlow",
                 style = MaterialTheme.typography.headlineLarge.copy(
@@ -122,7 +141,17 @@ fun LoginScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            TextButton(onClick = onRecoverPasswordClick) {
+                Text(
+                    text = "¿Olvidaste tu contraseña?",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), thickness = 1.dp)
             Spacer(modifier = Modifier.height(24.dp))
             

@@ -14,6 +14,9 @@ interface TaskApiService {
     @GET("api/tasks/worker/{trabajadorId}")
     suspend fun getTasksByWorker(@Path("trabajadorId") trabajadorId: String): Response<List<Task>>
 
+    @GET("api/tasks/finca/{fincaId}")
+    suspend fun getTasksByFinca(@Path("fincaId") fincaId: String): Response<List<Task>>
+
     @PATCH("api/tasks/{taskId}/progress")
     suspend fun updateProgress(
         @Path("taskId") taskId: String,

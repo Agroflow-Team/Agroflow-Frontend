@@ -42,6 +42,23 @@ class TaskViewModel : ViewModel() {
         }
     }
 
+    fun loadTasksByFinca(fincaId: String) {
+        viewModelScope.launch {
+            uiState = TaskUiState.Loading
+            try {
+                val response = RetrofitClient.taskApi.getTasksByFinca(fincaId)
+                if (response.isSuccessful) {
+                    tasks = response.body() ?: emptyList()
+                    uiState = TaskUiState.Success
+                } else {
+                    uiState = TaskUiState.Error("Error al cargar tareas: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                uiState = TaskUiState.Error("Error de conexión: ${e.message}")
+            }
+        }
+    }
+
     fun createTask(request: CreateTaskRequest, onComplete: () -> Unit) {
         viewModelScope.launch {
             uiState = TaskUiState.Loading

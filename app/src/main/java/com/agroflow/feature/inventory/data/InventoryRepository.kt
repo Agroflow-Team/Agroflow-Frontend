@@ -109,7 +109,7 @@ class InventoryRepository(private val inventoryDao: InventoryDao) {
         }
     }
 
-    private suspend fun syncPendingItems() {
+    suspend fun syncPendingItems() {
         val pending = inventoryDao.getPendingSyncItems()
         for (entity in pending) {
             try {
@@ -128,9 +128,19 @@ class InventoryRepository(private val inventoryDao: InventoryDao) {
                         inventoryDao.markAsSynced(entity.id)
                     }
                 } else if (entity.syncAction == "UPDATE") {
-                    inventoryDao.markAsSynced(entity.id)
+                    val request = UpdateInventoryItemRequest(
+                        nombreItem = entity.nombreItem,
+                        cantidad = entity.cantidad,
+                        unidadMedida = entity.unidadMedida
+                    )
+                    val response = RetrofitClient.inventoryApi.editItem(entity.id, request)
+                    if (response.isSuccessful) {
+                        inventoryDao.markAsSynced(entity.id)
+                    }
                 }
-            } catch (e: Exception) {}
+            } catch (e: Exception) {
+                // Keep it pending if connection fails
+            }
         }
     }
 
