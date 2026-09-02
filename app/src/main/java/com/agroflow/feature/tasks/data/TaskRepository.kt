@@ -10,25 +10,31 @@ class TaskRepository(private val taskDao: TaskDao) {
 
     suspend fun getTasksByWorker(workerId: String): List<Task> {
         return withContext(Dispatchers.IO) {
-            // Sincronizar tareas pendientes hacia el servidor (opcional en un MVP offline-first simple, pero buena práctica)
             syncPendingTasks()
 
             // 1. Intentar obtener del servidor
             try {
                 val response = RetrofitClient.taskApi.getTasksByWorker(workerId)
+                android.util.Log.d("TaskRepo", "API response code: ${response.code()}, body size: ${response.body()?.size}")
                 if (response.isSuccessful) {
                     val serverTasks = response.body() ?: emptyList()
+                    android.util.Log.d("TaskRepo", "Server tasks: ${serverTasks.map { "${it.id} - ${it.titulo} - ${it.trabajadorId}" }}")
                     val pendingIds = taskDao.getPendingSyncTasks().map { it.id }
                     
                     val entities = serverTasks.map { it.toEntity() }.filter { it.id !in pendingIds }
+                    android.util.Log.d("TaskRepo", "Inserting ${entities.size} entities into Room")
                     taskDao.insertTasks(entities)
+                } else {
+                    android.util.Log.e("TaskRepo", "API error: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                // Si falla (por ej. offline), ignoramos y devolvemos lo que hay en local
+                android.util.Log.e("TaskRepo", "Error fetching tasks: ${e.message}")
             }
 
             // 3. Obtener siempre la fuente de verdad: la BD local
-            taskDao.getTasksByWorker(workerId).map { it.toDomain() }
+            val localTasks = taskDao.getTasksByWorker(workerId).map { it.toDomain() }
+            android.util.Log.d("TaskRepo", "Local tasks for $workerId: ${localTasks.size}")
+            localTasks
         }
     }
 
@@ -83,7 +89,7 @@ class TaskRepository(private val taskDao: TaskDao) {
             estado = this.estado.name,
             novedades = this.novedades,
             horasEstimadas = this.horasEstimadas ?: 0.0,
-            horasReales = this.horasReales ?: 0.0,
+            horasReales = this.horasEfectivas,
             isSyncPending = false
         )
     }

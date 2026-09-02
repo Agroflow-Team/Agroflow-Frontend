@@ -38,7 +38,7 @@ class AuthViewModel : ViewModel() {
                 // Get FCM Token before login
                 var fcmToken: String? = null
                 try {
-                    val tokenResult = kotlinx.coroutines.tasks.await(com.google.firebase.messaging.FirebaseMessaging.getInstance().token)
+                    val tokenResult = com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
                     fcmToken = tokenResult
                 } catch (e: Exception) {
                     Log.e("AgroFlowLogin", "Error obteniendo FCM token: ${e.message}")

@@ -65,7 +65,7 @@ class EmpleadoViewModel(application: Application) : AndroidViewModel(application
             tasks = taskRepository.getTasksByWorker(actualTrabajadorId)
             
             totalHorasTrabajadas = tasks.filter { it.estado == TaskStatus.COMPLETADA }
-                .sumOf { it.horasReales ?: 0.0 }
+                .sumOf { it.horasEfectivas }
             
             salarioEstimado = totalHorasTrabajadas * tarifaHora
             

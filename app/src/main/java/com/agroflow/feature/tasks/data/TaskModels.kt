@@ -15,12 +15,16 @@ data class Task(
     val fechaCompletada: String? = null,
     val horasEstimadas: Double? = null,
     val horasReales: Double? = null,
+    val horasInvertidas: Double? = null,
     val estado: TaskStatus = TaskStatus.PENDIENTE,
     val novedades: String? = null,
     val severidadNovedad: String? = null,
     val eliminado: Boolean = false,
     val estadoSincronizacion: String = "PENDIENTE"
-)
+) {
+    // El backend envía horasInvertidas, el frontend usa horasReales
+    val horasEfectivas: Double get() = horasReales ?: horasInvertidas ?: 0.0
+}
 
 data class CreateTaskRequest(
     val fincaId: String,
