@@ -27,3 +27,7 @@ data class CreatePublicacionRequest(
 data class UpdateEstadoRequest(
     val estado: String
 )
+
+data class ImageUploadResponse(
+    val url: String
+)

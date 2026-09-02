@@ -103,12 +103,13 @@ fun MisPublicacionesScreen(
         }
     }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
     if (showCreateDialog && fincaId != null) {
         CreatePublicacionDialog(
             fincaId = fincaId,
             onDismiss = { showCreateDialog = false },
-            onCreate = { request ->
-                viewModel.createPublicacion(request) {
+            onCreate = { request, uri ->
+                viewModel.createPublicacionWithImage(context, uri, request) {
                     showCreateDialog = false
                 }
             }
@@ -252,7 +253,7 @@ fun MiPublicacionItem(pub: Publicacion, onMarkSold: () -> Unit, onEdit: () -> Un
 fun CreatePublicacionDialog(
     fincaId: String,
     onDismiss: () -> Unit,
-    onCreate: (CreatePublicacionRequest) -> Unit
+    onCreate: (CreatePublicacionRequest, android.net.Uri?) -> Unit
 ) {
     var titulo by remember { mutableStateOf("") }
     var desc by remember { mutableStateOf("") }
@@ -260,7 +261,7 @@ fun CreatePublicacionDialog(
     var cantidad by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
     var ubicacion by remember { mutableStateOf("") }
-    var imagenUrl by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
     AlertDialog(
         shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
@@ -316,16 +317,27 @@ fun CreatePublicacionDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    value = imagenUrl,
-                    onValueChange = { imagenUrl = it },
-                    label = { Text("URL de la Foto (Opcional)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+                    contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+                ) { uri: android.net.Uri? ->
+                    imageUri = uri
+                }
+
+                Button(
+                    onClick = { launcher.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(if (imageUri != null) "Imagen seleccionada ✅" else "📸 Seleccionar Foto de Galería")
+                }
+
+                // Keep this hidden or pass it back via onCreate
+                // We'll modify the callback to pass the URI
             }
         },
         confirmButton = {
+            val context = androidx.compose.ui.platform.LocalContext.current
             Button(
                 onClick = {
                     val p = precio.toDoubleOrNull() ?: 0.0
@@ -341,6 +353,10 @@ fun CreatePublicacionDialog(
                             }
                         }
 
+                        // We pass the CreatePublicacionRequest along with the imageUri
+                        // Since onCreate signature only takes Request, I'll invoke ViewModel directly or change signature.
+                        // I will change onCreate signature in the replacement.
+
                         onCreate(
                             CreatePublicacionRequest(
                                 fincaId = fincaId,
@@ -348,8 +364,9 @@ fun CreatePublicacionDialog(
                                 descripcion = fullDesc,
                                 precio = p,
                                 cantidadDisponible = c,
-                                imagenUrl = if (imagenUrl.isNotBlank()) imagenUrl.trim() else null
-                            )
+                                imagenUrl = null 
+                            ),
+                            imageUri 
                         )
                     }
                 },

@@ -10,6 +10,8 @@ import com.agroflow.feature.vitrina.data.VitrinaApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 
 class VitrinaViewModel : ViewModel() {
     private val apiService = RetrofitClient.getRetrofit().create(VitrinaApiService::class.java)
@@ -64,6 +66,48 @@ class VitrinaViewModel : ViewModel() {
                 onSuccess()
             } catch (e: Exception) {
                 _error.value = "Error al crear publicación: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun createPublicacionWithImage(
+        context: android.content.Context,
+        imageUri: android.net.Uri?,
+        request: CreatePublicacionRequest,
+        onSuccess: () -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            try {
+                var finalUrl = request.imagenUrl
+                if (imageUri != null) {
+                    val inputStream = context.contentResolver.openInputStream(imageUri)
+                    val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                    
+                    val file = java.io.File(context.cacheDir, "upload_${System.currentTimeMillis()}.jpg")
+                    val out = java.io.FileOutputStream(file)
+                    // Compress to 50% quality to save space
+                    bitmap?.compress(android.graphics.Bitmap.CompressFormat.JPEG, 50, out) 
+                    out.flush()
+                    out.close()
+
+                    val reqFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                    val body = okhttp3.MultipartBody.Part.createFormData("file", file.name, reqFile)
+                    
+                    val uploadResponse = apiService.uploadImage(body)
+                    val baseUrl = com.agroflow.core.session.SessionManager.baseUrl
+                    finalUrl = baseUrl + uploadResponse.url.removePrefix("/")
+                }
+
+                val finalRequest = request.copy(imagenUrl = finalUrl)
+                apiService.createPublicacion(finalRequest)
+                loadMisPublicaciones(request.fincaId)
+                onSuccess()
+            } catch (e: Exception) {
+                _error.value = "Error al crear: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

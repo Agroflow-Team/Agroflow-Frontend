@@ -26,4 +26,10 @@ interface VitrinaApiService {
 
     @DELETE("api/vitrina/{id}")
     suspend fun deletePublicacion(@Path("id") id: String)
+
+    @Multipart
+    @POST("api/vitrina/upload-image")
+    suspend fun uploadImage(
+        @Part file: okhttp3.MultipartBody.Part
+    ): ImageUploadResponse
 }
