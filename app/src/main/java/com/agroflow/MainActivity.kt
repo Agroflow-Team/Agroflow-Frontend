@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
                         
                         when (currentScreen) {
                             NavScreen.LANDING -> {
-                                com.agroflow.feature.auth.presentation.ui.LandingScreen(
+                                com.agroflow.feature.auth.presentation.ui.IndexScreen(
                                     onNavigateToLogin = { currentScreen = NavScreen.LOGIN },
                                     onNavigateToRegistroCliente = { currentScreen = NavScreen.REGISTRO_CLIENTE }
                                 )
