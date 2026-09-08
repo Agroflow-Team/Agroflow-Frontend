@@ -1,188 +1,237 @@
 package com.agroflow.feature.auth.presentation.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.agroflow.R
+import com.agroflow.core.session.SessionManager
 import com.agroflow.feature.auth.presentation.AuthViewModel
 import com.agroflow.feature.auth.presentation.LoginUiState
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import com.agroflow.R
 
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = viewModel(),
-    onLoginSuccess: () -> Unit = {}, // Nuevo parametro para navegar al tener exito
+    onLoginSuccess: () -> Unit = {},
+    onNavigateToRegister: () -> Unit = {},
     onRecoverPasswordClick: () -> Unit = {}
 ) {
+    val uiState = viewModel.uiState
+    
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    
 
-    // Observamos el estado actual del ViewModel
-    val uiState = viewModel.uiState
-
-    // Si el estado es Success, ejecutamos la accion de exito (navegar)
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
-            viewModel.resetState()
             onLoginSuccess()
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
+        // 1. Full-screen background
+        Image(
+            painter = painterResource(id = R.drawable.campo),
+            contentDescription = "Background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        // 2. Dark overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.45f))
+        )
+
+        // 3. Animated truck with vegetables
+        val infiniteTransition = rememberInfiniteTransition(label = "TruckTransition")
+        val animatedX by infiniteTransition.animateFloat(
+            initialValue = -300f,
+            targetValue = 400f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(6000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "TruckX"
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 32.dp),
+            contentAlignment = Alignment.BottomStart
+        ) {
+            Row(modifier = Modifier.offset(x = animatedX.dp)) {
+                Text("🚛", fontSize = 40.sp)
+                Text("🥬🍅🥕🌽🥦", fontSize = 24.sp, modifier = Modifier.align(Alignment.Bottom))
+            }
+        }
+
+        // Main content
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(28.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.img_logo),
-                contentDescription = "AgroFlow Logo",
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = "AgroFlow",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "Gestión agrícola inteligente",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
             Spacer(modifier = Modifier.height(48.dp))
 
-            TextField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = { Text("Correo electrónico") },
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+            // 4. Centered login card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White.copy(alpha = 0.92f)
                 ),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = { Text("Contraseña") },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                ),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Mostrar mensaje de error si el estado es Error
-            if (uiState is LoginUiState.Error) {
-                Text(
-                    text = uiState.message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            // Cambiar el boton por un spinner de carga si el estado es Loading
-            if (uiState is LoginUiState.Loading) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            } else {
-                Button(
-                    onClick = { viewModel.login(email, password) },
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Iniciar Sesión", style = MaterialTheme.typography.titleMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = MaterialTheme.colorScheme.onPrimary)
+                    // Logo
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_agroflow),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .size(90.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Iniciar Sesión",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2C7A4B)
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    val textFieldColors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White.copy(alpha = 0.9f),
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        focusedTextColor = Color(0xFF1C1C1E),
+                        unfocusedTextColor = Color(0xFF1C1C1E)
+                    )
+
+                    // Email TextField
+                    TextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = { Text("Correo electrónico", color = Color(0xFF8E8E93)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = textFieldColors,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Password TextField
+                    TextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        placeholder = { Text("Contraseña", color = Color(0xFF8E8E93)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = textFieldColors,
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        singleLine = true,
+                        trailingIcon = {
+                            val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(imageVector = image, contentDescription = "Toggle password visibility")
+                            }
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (uiState is LoginUiState.Error) {
+                        Text(
+                            text = (uiState as LoginUiState.Error).message,
+                            color = Color(0xFFFF453A),
+                            fontSize = 14.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    if (uiState is LoginUiState.Loading) {
+                        CircularProgressIndicator(color = Color(0xFF2C7A4B))
+                    } else {
+                        Button(
+                            onClick = { viewModel.login(email, password) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(25.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B))
+                        ) {
+                            Text("Iniciar Sesión", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    TextButton(onClick = onNavigateToRegister) {
+                        Text("Registrarse", color = Color(0xFF2C7A4B), fontWeight = FontWeight.Bold)
+                    }
+
+                    TextButton(onClick = onRecoverPasswordClick) {
+                        Text("¿Olvidaste tu contraseña?", color = Color(0xFF8E8E93))
+                    }
                 }
             }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            TextButton(onClick = onRecoverPasswordClick) {
-                Text(
-                    text = "¿Olvidaste tu contraseña?",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), thickness = 1.dp)
+
             Spacer(modifier = Modifier.height(24.dp))
+
             
-            var baseUrl by remember { mutableStateOf(com.agroflow.core.session.SessionManager.baseUrl) }
-            Text("Configuración de Servidor", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-            Spacer(modifier = Modifier.height(12.dp))
-            TextField(
-                value = baseUrl,
-                onValueChange = { baseUrl = it },
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                ),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(
-                onClick = {
-                    com.agroflow.core.session.SessionManager.baseUrl = baseUrl
-                },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                modifier = Modifier.height(44.dp)
-            ) {
-                Text("Guardar URL", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = MaterialTheme.colorScheme.onSecondary)
-            }
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }

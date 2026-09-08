@@ -122,6 +122,9 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onRecoverPasswordClick = {
                                         currentScreen = NavScreen.RECOVER_PASSWORD
+                                    },
+                                    onNavigateToRegister = {
+                                        currentScreen = NavScreen.REGISTRO_CLIENTE
                                     }
                                 )
                             }

@@ -4,9 +4,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.agroflow.feature.personnel.presentation.PersonnelViewModel
 import com.agroflow.feature.personnel.presentation.PersonnelUiState
@@ -25,129 +33,160 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
     var trabajadorToEdit by remember { mutableStateOf<Trabajador?>(null) }
     var trabajadorToDelete by remember { mutableStateOf<Trabajador?>(null) }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(
-            text = "Fincas y Trabajadores", 
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(Modifier.height(20.dp))
-        
-        if (viewModel.uiState is PersonnelUiState.Loading) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(16.dp))
-        }
-        
-        if (viewModel.uiState is PersonnelUiState.Error) {
-            Text(
-                (viewModel.uiState as PersonnelUiState.Error).message, 
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            Text("Selecciona una Finca", style = MaterialTheme.typography.titleMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Button(
-                onClick = { showCreateFincaDialog = true },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text("+ Finca", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold))
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(viewModel.fincas) { finca ->
-                val isSelected = viewModel.selectedFinca?.id == finca.id
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 5.dp)
-                        .clickable {
-                            viewModel.selectedFinca = finca
-                            viewModel.selectedTrabajador = null
-                            viewModel.loadTrabajadores(finca.id)
-                        },
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = if (isSelected) 1.5.dp else 1.dp,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                    )
+    Scaffold(
+        floatingActionButton = {
+            if (viewModel.selectedFinca != null) {
+                FloatingActionButton(
+                    onClick = { showCreateDialog = true },
+                    containerColor = Color(0xFF2C7A4B),
+                    contentColor = Color.White
                 ) {
-                    Text(
-                        text = "🏡 ${finca.nombre}", 
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium),
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(18.dp)
-                    )
+                    Text("+", style = MaterialTheme.typography.headlineMedium)
                 }
             }
-        }
-
-        if (viewModel.selectedFinca != null) {
-            Spacer(Modifier.height(24.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        },
+        containerColor = Color(0xFFF3EFE7)
+    ) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
+            Text(
+                text = "Fincas y Trabajadores", 
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(Modifier.height(20.dp))
+            
+            if (viewModel.uiState is PersonnelUiState.Loading) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(16.dp))
+            }
+            
+            if (viewModel.uiState is PersonnelUiState.Error) {
                 Text(
-                    text = "Trabajadores de ${viewModel.selectedFinca?.nombre}", 
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    (viewModel.uiState as PersonnelUiState.Error).message, 
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Selecciona una Finca", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Button(
-                    onClick = { showCreateDialog = true },
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                    onClick = { showCreateFincaDialog = true },
+                    shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("+ Trabajador", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold))
+                    Text("+ Finca", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
                 }
             }
             Spacer(Modifier.height(8.dp))
-            
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(viewModel.trabajadores) { trabajador ->
-                    val isSelected = viewModel.selectedTrabajador?.id == trabajador.id
+
+            // Keep finca selection simple to save vertical space
+            LazyColumn(modifier = Modifier.height(150.dp)) {
+                items(viewModel.fincas) { finca ->
+                    val isSelected = viewModel.selectedFinca?.id == finca.id
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 5.dp)
                             .clickable {
-                                viewModel.selectedTrabajador = trabajador
+                                viewModel.selectedFinca = finca
+                                viewModel.selectedTrabajador = null
+                                viewModel.loadTrabajadores(finca.id)
                             },
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                         ),
                         border = androidx.compose.foundation.BorderStroke(
                             width = if (isSelected) 1.5.dp else 1.dp,
-                            color = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                         )
                     ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                Text(
-                                    text = trabajador.nombreCompleto, 
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
-                                    color = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
-                                )
-                                Row {
-                                    TextButton(onClick = { trabajadorToEdit = trabajador; showEditDialog = true }) {
-                                        Text("Editar", color = androidx.compose.ui.graphics.Color(0xFF0A84FF), style = MaterialTheme.typography.bodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium))
+                        Text(
+                            text = "🏡 ${finca.nombre}", 
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(18.dp)
+                        )
+                    }
+                }
+            }
+
+            if (viewModel.selectedFinca != null) {
+                Spacer(Modifier.height(24.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Trabajadores", 
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(viewModel.trabajadores) { trabajador ->
+                        val isSelected = viewModel.selectedTrabajador?.id == trabajador.id
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.selectedTrabajador = trabajador },
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                // Avatar
+                                Surface(
+                                    modifier = Modifier.size(60.dp),
+                                    shape = CircleShape,
+                                    color = Color(0xFF2C7A4B).copy(alpha=0.15f)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text("👤", style = MaterialTheme.typography.headlineMedium)
                                     }
-                                    TextButton(onClick = { trabajadorToDelete = trabajador; showDeleteDialog = true }) {
-                                        Text("Eliminar", color = androidx.compose.ui.graphics.Color(0xFFFF453A), style = MaterialTheme.typography.bodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium))
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = trabajador.nombreCompleto.split(" ").firstOrNull() ?: trabajador.nombreCompleto, 
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = trabajador.documento, 
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    IconButton(
+                                        onClick = { trabajadorToEdit = trabajador; showEditDialog = true },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Text("✏️")
+                                    }
+                                    IconButton(
+                                        onClick = { trabajadorToDelete = trabajador; showDeleteDialog = true },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Text("🗑️")
                                     }
                                 }
                             }
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = "Documento: ${trabajador.documento}", 
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
                     }
                 }
@@ -155,25 +194,26 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
         }
     }
 
+    val textFieldColors = TextFieldDefaults.colors(
+        focusedContainerColor = Color(0xFFF3EFE7),
+        unfocusedContainerColor = Color(0xFFF3EFE7).copy(alpha = 0.7f),
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+        cursorColor = Color(0xFF2C7A4B),
+        focusedTextColor = Color(0xFF1C1C1E),
+        unfocusedTextColor = Color(0xFF1C1C1E),
+        focusedPlaceholderColor = Color(0xFF8E8E93),
+        unfocusedPlaceholderColor = Color(0xFF8E8E93)
+    )
+
     if (showCreateFincaDialog) {
         var nombreFinca by remember { mutableStateOf("") }
-        val textFieldColors = TextFieldDefaults.colors(
-            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
-            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
-            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-            cursorColor = androidx.compose.ui.graphics.Color(0xFF30D158),
-            unfocusedTextColor = androidx.compose.ui.graphics.Color.White,
-            focusedTextColor = androidx.compose.ui.graphics.Color.White,
-            unfocusedPlaceholderColor = androidx.compose.ui.graphics.Color(0xFF8E8E93),
-            focusedPlaceholderColor = androidx.compose.ui.graphics.Color(0xFF8E8E93)
-        )
 
         AlertDialog(
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-            containerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showCreateFincaDialog = false },
-            title = { Text("Registrar Nueva Finca", color = androidx.compose.ui.graphics.Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)) },
+            title = { Text("Registrar Nueva Finca", color = Color(0xFF1C1C1E), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
             text = {
                 Column {
                     TextField(
@@ -182,7 +222,7 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                         placeholder = { Text("Nombre de la finca (ej. Villa Verde)") }, 
                         singleLine = true, 
                         colors = textFieldColors, 
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), 
+                        shape = RoundedCornerShape(14.dp), 
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -195,11 +235,11 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                             showCreateFincaDialog = false
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF30D158))
-                ) { Text("Registrar", color = androidx.compose.ui.graphics.Color.White) }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B))
+                ) { Text("Registrar", color = Color.White) }
             },
             dismissButton = {
-                TextButton(onClick = { showCreateFincaDialog = false }) { Text("Cancelar", color = androidx.compose.ui.graphics.Color(0xFF8E8E93)) }
+                TextButton(onClick = { showCreateFincaDialog = false }) { Text("Cancelar", color = Color(0xFF8E8E93)) }
             }
         )
     }
@@ -211,34 +251,22 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
         var clave by remember { mutableStateOf("") }
         var tarifaHora by remember { mutableStateOf("") }
 
-        val textFieldColors = TextFieldDefaults.colors(
-            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
-            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
-            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-            cursorColor = androidx.compose.ui.graphics.Color(0xFF30D158),
-            unfocusedTextColor = androidx.compose.ui.graphics.Color.White,
-            focusedTextColor = androidx.compose.ui.graphics.Color.White,
-            unfocusedPlaceholderColor = androidx.compose.ui.graphics.Color(0xFF8E8E93),
-            focusedPlaceholderColor = androidx.compose.ui.graphics.Color(0xFF8E8E93)
-        )
-
         AlertDialog(
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-            containerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showCreateDialog = false },
-            title = { Text("Nuevo Trabajador", color = androidx.compose.ui.graphics.Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)) },
+            title = { Text("Nuevo Trabajador", color = Color(0xFF1C1C1E), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
             text = {
                 Column {
-                    TextField(value = nombre, onValueChange = { nombre = it }, placeholder = { Text("Nombre Completo") }, singleLine = true, colors = textFieldColors, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                    TextField(value = nombre, onValueChange = { nombre = it }, placeholder = { Text("Nombre Completo") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = documento, onValueChange = { documento = it }, placeholder = { Text("Documento") }, singleLine = true, colors = textFieldColors, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                    TextField(value = documento, onValueChange = { documento = it }, placeholder = { Text("Documento") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = correo, onValueChange = { correo = it }, placeholder = { Text("Correo") }, singleLine = true, colors = textFieldColors, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                    TextField(value = correo, onValueChange = { correo = it }, placeholder = { Text("Correo") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = clave, onValueChange = { clave = it }, placeholder = { Text("Contraseña") }, singleLine = true, colors = textFieldColors, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                    TextField(value = clave, onValueChange = { clave = it }, placeholder = { Text("Contraseña") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = tarifaHora, onValueChange = { tarifaHora = it }, placeholder = { Text("Tarifa / Hora (ej. 10000)") }, singleLine = true, colors = textFieldColors, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                    TextField(value = tarifaHora, onValueChange = { tarifaHora = it }, placeholder = { Text("Tarifa / Hora (ej. 10000)") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                 }
             },
             confirmButton = {
@@ -249,11 +277,11 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                             showCreateDialog = false
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF30D158))
-                ) { Text("Crear", color = androidx.compose.ui.graphics.Color.White) }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B))
+                ) { Text("Crear", color = Color.White) }
             },
             dismissButton = {
-                TextButton(onClick = { showCreateDialog = false }) { Text("Cancelar", color = androidx.compose.ui.graphics.Color(0xFF8E8E93)) }
+                TextButton(onClick = { showCreateDialog = false }) { Text("Cancelar", color = Color(0xFF8E8E93)) }
             }
         )
     }
@@ -263,30 +291,18 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
         var documento by remember { mutableStateOf(trabajadorToEdit!!.documento) }
         var tarifaHora by remember { mutableStateOf(trabajadorToEdit!!.tarifaHora.toString()) }
 
-        val textFieldColors = TextFieldDefaults.colors(
-            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
-            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
-            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-            cursorColor = androidx.compose.ui.graphics.Color(0xFF30D158),
-            unfocusedTextColor = androidx.compose.ui.graphics.Color.White,
-            focusedTextColor = androidx.compose.ui.graphics.Color.White,
-            unfocusedPlaceholderColor = androidx.compose.ui.graphics.Color(0xFF8E8E93),
-            focusedPlaceholderColor = androidx.compose.ui.graphics.Color(0xFF8E8E93)
-        )
-
         AlertDialog(
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-            containerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Editar Trabajador", color = androidx.compose.ui.graphics.Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)) },
+            title = { Text("Editar Trabajador", color = Color(0xFF1C1C1E), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
             text = {
                 Column {
-                    TextField(value = nombre, onValueChange = { nombre = it }, placeholder = { Text("Nombre Completo") }, singleLine = true, colors = textFieldColors, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                    TextField(value = nombre, onValueChange = { nombre = it }, placeholder = { Text("Nombre Completo") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = documento, onValueChange = { documento = it }, placeholder = { Text("Documento") }, singleLine = true, colors = textFieldColors, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                    TextField(value = documento, onValueChange = { documento = it }, placeholder = { Text("Documento") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = tarifaHora, onValueChange = { tarifaHora = it }, placeholder = { Text("Tarifa / Hora") }, singleLine = true, colors = textFieldColors, shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth())
+                    TextField(value = tarifaHora, onValueChange = { tarifaHora = it }, placeholder = { Text("Tarifa / Hora") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                 }
             },
             confirmButton = {
@@ -295,33 +311,33 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                         viewModel.updateTrabajador(trabajadorToEdit!!.id, nombre, documento, tarifaHora.toDoubleOrNull() ?: 0.0)
                         showEditDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF30D158))
-                ) { Text("Guardar", color = androidx.compose.ui.graphics.Color.White) }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B))
+                ) { Text("Guardar", color = Color.White) }
             },
             dismissButton = {
-                TextButton(onClick = { showEditDialog = false }) { Text("Cancelar", color = androidx.compose.ui.graphics.Color(0xFF8E8E93)) }
+                TextButton(onClick = { showEditDialog = false }) { Text("Cancelar", color = Color(0xFF8E8E93)) }
             }
         )
     }
 
     if (showDeleteDialog && trabajadorToDelete != null) {
         AlertDialog(
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-            containerColor = androidx.compose.ui.graphics.Color(0xFF1C1C1E),
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar Trabajador", color = androidx.compose.ui.graphics.Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)) },
-            text = { Text("¿Eliminar a ${trabajadorToDelete!!.nombreCompleto}?", color = androidx.compose.ui.graphics.Color.White) },
+            title = { Text("Eliminar Trabajador", color = Color(0xFF1C1C1E), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+            text = { Text("¿Eliminar a ${trabajadorToDelete!!.nombreCompleto}?", color = Color(0xFF1C1C1E)) },
             confirmButton = {
                 Button(
                     onClick = {
                         viewModel.deleteTrabajador(trabajadorToDelete!!.id)
                         showDeleteDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFFFF453A))
-                ) { Text("Eliminar", color = androidx.compose.ui.graphics.Color.White) }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF453A))
+                ) { Text("Eliminar", color = Color.White) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar", color = androidx.compose.ui.graphics.Color(0xFF8E8E93)) }
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar", color = Color(0xFF8E8E93)) }
             }
         )
     }

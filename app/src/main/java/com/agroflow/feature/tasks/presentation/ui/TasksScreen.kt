@@ -1,12 +1,18 @@
 package com.agroflow.feature.tasks.presentation.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agroflow.feature.personnel.presentation.PersonnelViewModel
@@ -19,22 +25,22 @@ import com.agroflow.feature.tasks.data.UpdateProgressRequest
 @Composable
 fun StatusBadge(status: TaskStatus) {
     val (bgColor, textColor, label) = when (status) {
-        TaskStatus.PENDIENTE -> Triple(androidx.compose.ui.graphics.Color(0xFF3A2D0F), androidx.compose.ui.graphics.Color(0xFFFF9F0A), "Pendiente")
-        TaskStatus.COMPLETADA -> Triple(androidx.compose.ui.graphics.Color(0xFF143F24), androidx.compose.ui.graphics.Color(0xFF30D158), "Completada")
-        TaskStatus.CANCELADA -> Triple(androidx.compose.ui.graphics.Color(0xFF3A1E1E), androidx.compose.ui.graphics.Color(0xFFFF453A), "Cancelada")
-        else -> Triple(androidx.compose.ui.graphics.Color(0xFF0F2D5E), androidx.compose.ui.graphics.Color(0xFF0A84FF), "En Progreso")
+        TaskStatus.PENDIENTE -> Triple(Color(0xFFFFF4E5), Color(0xFFFF9F0A), "Pendiente")
+        TaskStatus.COMPLETADA -> Triple(Color(0xFFE8F8EE), Color(0xFF30D158), "Completada")
+        TaskStatus.CANCELADA -> Triple(Color(0xFFFFEBEE), Color(0xFFFF453A), "Cancelada")
+        else -> Triple(Color(0xFFE3F2FD), Color(0xFF0A84FF), "En Progreso")
     }
 
     Surface(
         color = bgColor,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-        modifier = androidx.compose.ui.Modifier.padding(vertical = 4.dp)
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.padding(vertical = 4.dp)
     ) {
         Text(
             text = label,
             color = textColor,
-            style = MaterialTheme.typography.bodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
-            modifier = androidx.compose.ui.Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }
@@ -42,60 +48,60 @@ fun StatusBadge(status: TaskStatus) {
 @Composable
 fun SeverityBadge(severity: String) {
     val (bgColor, textColor, label) = when (severity.uppercase()) {
-        "BAJO" -> Triple(androidx.compose.ui.graphics.Color(0xFF143F24), androidx.compose.ui.graphics.Color(0xFF30D158), "Bajo")
-        "MEDIO" -> Triple(androidx.compose.ui.graphics.Color(0xFF3A2D0F), androidx.compose.ui.graphics.Color(0xFFFFD60A), "Medio")
-        "ALTO" -> Triple(androidx.compose.ui.graphics.Color(0xFF3A1E1E), androidx.compose.ui.graphics.Color(0xFFFF453A), "Alto")
-        else -> Triple(androidx.compose.ui.graphics.Color(0xFF2C2C2E), androidx.compose.ui.graphics.Color(0xFF8E8E93), severity)
+        "BAJO" -> Triple(Color(0xFFE8F8EE), Color(0xFF30D158), "Bajo")
+        "MEDIO" -> Triple(Color(0xFFFFF8E1), Color(0xFFFFD60A), "Medio")
+        "ALTO" -> Triple(Color(0xFFFFEBEE), Color(0xFFFF453A), "Alto")
+        else -> Triple(Color(0xFFF5F5F5), Color(0xFF8E8E93), severity)
     }
 
     Surface(
         color = bgColor,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-        modifier = androidx.compose.ui.Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
     ) {
         Text(
             text = label,
             color = textColor,
-            style = MaterialTheme.typography.bodySmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
-            modifier = androidx.compose.ui.Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }
 
 @Composable
 fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewModel = viewModel()) {
-    val trabajador = personnelViewModel.selectedTrabajador
-
-    LaunchedEffect(trabajador) {
-        if (trabajador != null) {
-            taskViewModel.loadTasksForWorker(trabajador.id)
+    val finca = personnelViewModel.selectedFinca
+    
+    LaunchedEffect(finca) {
+        if (finca != null) {
+            taskViewModel.loadTasksByFinca(finca.id)
         }
     }
 
     var showCreateDialog by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        if (trabajador == null) {
+        if (finca == null) {
             Text(
-                text = "Por favor, selecciona un trabajador en la pestaña Fincas/Personal.", 
+                text = "Por favor, selecciona una finca en la pestaña Personal.", 
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             return@Column
         }
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "Tareas de ${trabajador.nombreCompleto.split(" ").firstOrNull() ?: trabajador.nombreCompleto}", 
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                text = "Gestión de Tareas", 
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onBackground
             )
             Button(
                 onClick = { showCreateDialog = true },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Nueva Tarea", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold))
+                Text("Nueva Tarea", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
             }
         }
         
@@ -106,64 +112,80 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
             Spacer(Modifier.height(16.dp))
         }
 
-        LazyColumn {
-            items(taskViewModel.tasks) { task ->
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min),
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                    ) {
-                        val barColor = when (task.estado) {
-                            TaskStatus.COMPLETADA -> androidx.compose.ui.graphics.Color(0xFF30D158)
-                            TaskStatus.PENDIENTE -> androidx.compose.ui.graphics.Color(0xFFFF9F0A)
-                            TaskStatus.CANCELADA -> androidx.compose.ui.graphics.Color(0xFFFF453A)
-                            else -> androidx.compose.ui.graphics.Color(0xFF0A84FF)
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .width(5.dp)
-                                .background(barColor)
-                        )
-                        Column(modifier = Modifier.padding(16.dp).weight(1f)) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                Text(task.titulo, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
-                                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                    if (task.severidadNovedad != null) {
-                                        SeverityBadge(task.severidadNovedad)
-                                    }
-                                    StatusBadge(task.estado)
-                                }
-                            }
-                            Spacer(Modifier.height(6.dp))
-                            Text(task.descripcion, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            if (!task.novedades.isNullOrBlank()) {
-                                Spacer(Modifier.height(6.dp))
-                                Text("Novedades: ${task.novedades}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                            }
-                        }
-                    }
+        val allTasks = taskViewModel.tasks
+        val pendingTasks = allTasks.filter { it.estado == TaskStatus.PENDIENTE }
+        val inProgressTasks = allTasks.filter { it.estado == TaskStatus.EN_PROGRESO }
+        val completedTasks = allTasks.filter { it.estado == TaskStatus.COMPLETADA }
+
+        // Kanban Board
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            TaskColumn(
+                title = "📋 Pendiente",
+                headerColor = Color(0xFFFF9F0A),
+                tasks = pendingTasks,
+                onMoveToInProgress = { task -> 
+                    taskViewModel.updateProgress(
+                        task.id!!,
+                        UpdateProgressRequest(task.trabajadorId, task.horasReales ?: 0.0, task.novedades ?: "", task.severidadNovedad, TaskStatus.EN_PROGRESO)
+                    ) {}
+                },
+                onMoveToCompleted = null
+            )
+            TaskColumn(
+                title = "🔄 En Proceso",
+                headerColor = Color(0xFF0A84FF),
+                tasks = inProgressTasks,
+                onMoveToInProgress = null,
+                onMoveToCompleted = { task -> 
+                    taskViewModel.updateProgress(
+                        task.id!!,
+                        UpdateProgressRequest(task.trabajadorId, task.horasReales ?: 0.0, task.novedades ?: "", task.severidadNovedad, TaskStatus.COMPLETADA)
+                    ) {}
                 }
-            }
+            )
+            TaskColumn(
+                title = "✅ Terminado",
+                headerColor = Color(0xFF30D158),
+                tasks = completedTasks,
+                onMoveToInProgress = null,
+                onMoveToCompleted = null
+            )
         }
     }
 
-    if (showCreateDialog && trabajador != null) {
+    if (showCreateDialog) {
         var titulo by remember { mutableStateOf("") }
         var descripcion by remember { mutableStateOf("") }
+        // Simple assignment: grab the selected worker if available, else require one.
+        val trabajador = personnelViewModel.selectedTrabajador
         
         AlertDialog(
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(24.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showCreateDialog = false },
-            title = { Text("Crear Tarea", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)) },
+            title = { Text("Crear Tarea", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
             text = {
                 Column {
+                    if (trabajador == null) {
+                        Text(
+                            text = "Por favor, selecciona también un trabajador en la pantalla de Personal antes de crear una tarea.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    } else {
+                        Text(
+                            text = "Asignado a: ${trabajador.nombreCompleto}",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
                     TextField(
                         value = titulo, 
                         onValueChange = { titulo = it }, 
@@ -172,11 +194,11 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                            disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent
                         ),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(12.dp))
@@ -187,11 +209,11 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                            disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent
                         ),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -199,20 +221,23 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
             confirmButton = {
                 Button(
                     onClick = {
-                        val request = CreateTaskRequest(
-                            fincaId = personnelViewModel.selectedFinca!!.id,
-                            trabajadorId = trabajador.id,
-                            loteId = null,
-                            titulo = titulo,
-                            descripcion = descripcion,
-                            estado = TaskStatus.PENDIENTE
-                        )
-                        taskViewModel.createTask(request) {
-                            showCreateDialog = false
+                        if (trabajador != null && titulo.isNotBlank()) {
+                            val request = CreateTaskRequest(
+                                fincaId = finca!!.id,
+                                trabajadorId = trabajador.id,
+                                loteId = null,
+                                titulo = titulo,
+                                descripcion = descripcion,
+                                estado = TaskStatus.PENDIENTE
+                            )
+                            taskViewModel.createTask(request) {
+                                showCreateDialog = false
+                            }
                         }
                     },
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    enabled = trabajador != null
                 ) {
                     Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
                 }
@@ -223,5 +248,103 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
                 }
             }
         )
+    }
+}
+
+@Composable
+fun TaskColumn(
+    title: String,
+    headerColor: Color,
+    tasks: List<com.agroflow.feature.tasks.data.Task>,
+    onMoveToInProgress: ((com.agroflow.feature.tasks.data.Task) -> Unit)?,
+    onMoveToCompleted: ((com.agroflow.feature.tasks.data.Task) -> Unit)?
+) {
+    Column(
+        modifier = Modifier
+            .width(280.dp)
+            .fillMaxHeight()
+            .background(Color(0xFFF3EFE7).copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .padding(8.dp)
+    ) {
+        // Header
+        Surface(
+            color = headerColor.copy(alpha = 0.1f),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = title,
+                color = headerColor,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(tasks) { task ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = task.titulo,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = task.descripcion,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                        
+                        Spacer(Modifier.height(8.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (task.severidadNovedad != null) {
+                                SeverityBadge(task.severidadNovedad)
+                            } else {
+                                Spacer(modifier = Modifier.width(1.dp))
+                            }
+                            
+                            // Move buttons
+                            if (onMoveToInProgress != null) {
+                                TextButton(
+                                    onClick = { onMoveToInProgress(task) },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text("→ Proceso", style = MaterialTheme.typography.bodySmall, color = Color(0xFF0A84FF))
+                                }
+                            }
+                            
+                            if (onMoveToCompleted != null) {
+                                TextButton(
+                                    onClick = { onMoveToCompleted(task) },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text("→ Terminado", style = MaterialTheme.typography.bodySmall, color = Color(0xFF30D158))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
