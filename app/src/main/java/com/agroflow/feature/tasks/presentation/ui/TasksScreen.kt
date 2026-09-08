@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -287,8 +290,29 @@ fun TaskColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(tasks) { task ->
+                var offsetX by remember { mutableStateOf(0f) }
+                val threshold = 150f
+
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset { IntOffset(offsetX.toInt(), 0) }
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures(
+                                onDragEnd = {
+                                    if (offsetX > threshold && onMoveToInProgress != null) {
+                                        onMoveToInProgress(task)
+                                    } else if (offsetX > threshold && onMoveToCompleted != null) {
+                                        onMoveToCompleted(task)
+                                    } else if (offsetX < -threshold && onMoveToInProgress != null) {
+                                        // Optional: move back to progress if needed
+                                    }
+                                    offsetX = 0f
+                                }
+                            ) { change, dragAmount ->
+                                offsetX += dragAmount
+                            }
+                        },
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -321,26 +345,12 @@ fun TaskColumn(
                                 Spacer(modifier = Modifier.width(1.dp))
                             }
                             
-                            // Move buttons
-                            if (onMoveToInProgress != null) {
-                                TextButton(
-                                    onClick = { onMoveToInProgress(task) },
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                                    modifier = Modifier.height(30.dp)
-                                ) {
-                                    Text("→ Proceso", style = MaterialTheme.typography.bodySmall, color = Color(0xFF0A84FF))
-                                }
-                            }
-                            
-                            if (onMoveToCompleted != null) {
-                                TextButton(
-                                    onClick = { onMoveToCompleted(task) },
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                                    modifier = Modifier.height(30.dp)
-                                ) {
-                                    Text("→ Terminado", style = MaterialTheme.typography.bodySmall, color = Color(0xFF30D158))
-                                }
-                            }
+                            // Visual hint for drag
+                            Text(
+                                text = "↔ Arrastra para mover",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Gray.copy(alpha = 0.5f)
+                            )
                         }
                     }
                 }

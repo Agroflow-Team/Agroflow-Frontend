@@ -24,6 +24,9 @@ import com.agroflow.feature.empleado.presentation.EmpleadoViewModel
 import com.agroflow.feature.tasks.data.Task
 import com.agroflow.feature.tasks.data.TaskStatus
 import com.agroflow.feature.tasks.presentation.ui.SeverityBadge
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.unit.IntOffset
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -176,8 +179,28 @@ fun WorkerTaskColumn(
         Spacer(modifier = Modifier.height(8.dp))
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(tasks) { task ->
+                var offsetX by remember { mutableStateOf(0f) }
+                val threshold = 150f
+
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .offset { IntOffset(offsetX.toInt(), 0) }
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures(
+                                onDragEnd = {
+                                    if (offsetX > threshold && onMoveToInProgress != null) {
+                                        onMoveToInProgress(task)
+                                    } else if (offsetX > threshold && onMoveToCompleted != null) {
+                                        onMoveToCompleted(task)
+                                    }
+                                    offsetX = 0f
+                                }
+                            ) { change, dragAmount ->
+                                offsetX += dragAmount
+                            }
+                        },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -214,25 +237,12 @@ fun WorkerTaskColumn(
                                 Spacer(modifier = Modifier.width(1.dp))
                             }
 
-                            if (onMoveToInProgress != null) {
-                                TextButton(
-                                    onClick = { onMoveToInProgress(task) },
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                                    modifier = Modifier.height(30.dp)
-                                ) {
-                                    Text("→ Proceso", style = MaterialTheme.typography.bodySmall, color = Color(0xFF0A84FF))
-                                }
-                            }
-
-                            if (onMoveToCompleted != null) {
-                                TextButton(
-                                    onClick = { onMoveToCompleted(task) },
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                                    modifier = Modifier.height(30.dp)
-                                ) {
-                                    Text("→ Terminado", style = MaterialTheme.typography.bodySmall, color = Color(0xFF30D158))
-                                }
-                            }
+                            // Visual hint for drag
+                            Text(
+                                text = "↔ Arrastra para mover",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Gray.copy(alpha = 0.5f)
+                            )
                         }
                     }
                 }

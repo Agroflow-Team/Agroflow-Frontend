@@ -145,24 +145,7 @@ fun DashboardHomeScreen() {
             }
         }
 
-        // 5. Notifications section
-        item {
-            Column {
-                Text(
-                    text = "Notificaciones",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1C1C1E),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    notifications.forEach { notif ->
-                        NotificationCard(message = notif.first, time = notif.second)
-                    }
-                }
-            }
-        }
-        
+
         item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }

@@ -1,5 +1,6 @@
 package com.agroflow.feature.empleado.presentation.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agroflow.feature.empleado.presentation.EmpleadoViewModel
 import com.agroflow.feature.profile.presentation.ui.ProfileEditScreen
 import kotlinx.coroutines.launch
+import com.agroflow.core.session.SessionManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,6 +30,8 @@ fun EmpleadoDashboardScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var selectedTab by remember { mutableIntStateOf(0) }
+    
+    var showNotifications by remember { mutableStateOf(false) }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -49,7 +53,7 @@ fun EmpleadoDashboardScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "worker@agroflow.com", fontWeight = FontWeight.Bold)
+                    Text(text = SessionManager.userEmail ?: "worker@agroflow.com", fontWeight = FontWeight.Bold)
                     Text(
                         text = "Mi Perfil",
                         color = MaterialTheme.colorScheme.primary,
@@ -93,21 +97,67 @@ fun EmpleadoDashboardScreen(
                         scope.launch { drawerState.close() }
                     }
                 )
+                
+                Spacer(modifier = Modifier.weight(1f))
+                
+                // Logout Button
+                TextButton(
+                    onClick = onLogout,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFFF453A))
+                ) {
+                    Text("Cerrar Sesión", fontWeight = FontWeight.Bold)
+                }
             }
         }
     ) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("AgroFlow Worker") },
+                    title = { 
+                        val title = when(selectedTab) {
+                            0 -> "Dashboard"
+                            1 -> "Gestión de Tareas"
+                            2 -> "Inventario"
+                            3 -> "Pagos"
+                            4 -> "Mi Perfil"
+                            else -> "AgroFlow Worker"
+                        }
+                        Column {
+                            Text(title)
+                            // Display Finca
+                            if (viewModel.currentFincaId != null) {
+                                Text("Finca Actual: ${viewModel.currentFincaId}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            } else {
+                                Text("Sin finca asignada", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
                     },
                     actions = {
-                        IconButton(onClick = { /* Notifications */ }) {
-                            Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                        Box {
+                            IconButton(onClick = { showNotifications = true }) {
+                                Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                            }
+                            DropdownMenu(
+                                expanded = showNotifications,
+                                onDismissRequest = { showNotifications = false },
+                                modifier = Modifier.width(300.dp).background(MaterialTheme.colorScheme.surface)
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Nuevas tareas asignadas", fontWeight = FontWeight.Bold) },
+                                    onClick = { showNotifications = false }
+                                )
+                                Divider()
+                                DropdownMenuItem(
+                                    text = { Text("Se aprobó tu reporte de horas", fontWeight = FontWeight.Bold) },
+                                    onClick = { showNotifications = false }
+                                )
+                            }
                         }
                     }
                 )
@@ -125,4 +175,3 @@ fun EmpleadoDashboardScreen(
         }
     }
 }
-

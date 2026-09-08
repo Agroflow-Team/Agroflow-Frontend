@@ -1,8 +1,10 @@
 package com.agroflow.feature.dashboard.presentation.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
@@ -19,6 +21,7 @@ import kotlinx.coroutines.launch
 
 import com.agroflow.core.session.SessionManager
 import com.agroflow.feature.personnel.presentation.PersonnelViewModel
+import com.agroflow.feature.personnel.presentation.ui.FincaManagementScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +30,20 @@ fun DashboardScreen(onLogout: () -> Unit) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var selectedTab by remember { mutableStateOf(0) }
+    
+    var showNotifications by remember { mutableStateOf(false) }
+
+    // Finca startup check
+    LaunchedEffect(personnelViewModel.selectedFinca, personnelViewModel.fincas) {
+        if (personnelViewModel.fincas.isNotEmpty() && personnelViewModel.selectedFinca == null) {
+            // Wait, we need to force selection. But if fincas is empty, they must create one.
+            // Let's just route them to Fincas screen if they don't have a finca selected
+            if (selectedTab != 8) {
+                // Ensure they go to Fincas
+                selectedTab = 8
+            }
+        }
+    }
 
     val menuItems = listOf(
         "📊 Dashboard" to 0,
@@ -35,7 +52,8 @@ fun DashboardScreen(onLogout: () -> Unit) {
         "✅ Gestión de Tareas" to 3,
         "🏷️ Catálogo" to 4,
         "💰 Ventas" to 5,
-        "📈 Balance Financiero" to 6
+        "📈 Balance Financiero" to 6,
+        "🏡 Fincas" to 8
     )
 
     ModalNavigationDrawer(
@@ -73,15 +91,17 @@ fun DashboardScreen(onLogout: () -> Unit) {
                         },
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text("Mi Perfil", color = Color.White)
+                        Text("Mi Perfil", color = Color.White.copy(alpha = 0.8f))
                     }
-                    
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 8.dp))
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Divider(color = Color.White.copy(alpha = 0.3f))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Menu items
-                    menuItems.forEach { (title, index) ->
+                    menuItems.forEach { (label, index) ->
                         NavigationDrawerItem(
-                            label = { Text(title) },
+                            label = { Text(label) },
                             selected = selectedTab == index,
                             onClick = {
                                 selectedTab = index
@@ -94,19 +114,18 @@ fun DashboardScreen(onLogout: () -> Unit) {
                                 unselectedTextColor = Color.White.copy(alpha = 0.8f)
                             )
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
-
-                    // Logout button
+                    
+                    // Logout
                     TextButton(
-                        onClick = {
-                            scope.launch { drawerState.close() }
-                            onLogout()
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                        onClick = onLogout,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFFF453A))
                     ) {
-                        Text("Cerrar Sesión", color = Color.Red, fontWeight = FontWeight.Bold)
+                        Text("Cerrar Sesión", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -115,20 +134,9 @@ fun DashboardScreen(onLogout: () -> Unit) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { 
-                        Text(
-                            when(selectedTab) {
-                                0 -> "Dashboard"
-                                1 -> "Inventario"
-                                2 -> "Empleados"
-                                3 -> "Tareas"
-                                4 -> "Catálogo"
-                                5 -> "Ventas"
-                                6 -> "Balance Financiero"
-                                7 -> "Mi Perfil"
-                                else -> ""
-                            }
-                        ) 
+                    title = {
+                        val title = menuItems.find { it.second == selectedTab }?.first ?: if(selectedTab == 7) "Mi Perfil" else "AgroFlow"
+                        Text(title)
                     },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
@@ -136,18 +144,37 @@ fun DashboardScreen(onLogout: () -> Unit) {
                         }
                     },
                     actions = {
-                        IconButton(onClick = { /* TODO: Show notifications */ }) {
-                            Icon(androidx.compose.material.icons.Icons.Default.Notifications, contentDescription = "Notificaciones")
+                        Box {
+                            IconButton(onClick = { showNotifications = true }) {
+                                Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
+                            }
+                            DropdownMenu(
+                                expanded = showNotifications,
+                                onDismissRequest = { showNotifications = false },
+                                modifier = Modifier.width(300.dp).background(MaterialTheme.colorScheme.surface)
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Se regó el cultivo de tomate", fontWeight = FontWeight.Bold) },
+                                    onClick = { showNotifications = false }
+                                )
+                                Divider()
+                                DropdownMenuItem(
+                                    text = { Text("Nueva tarea completada: Revisar cercas", fontWeight = FontWeight.Bold) },
+                                    onClick = { showNotifications = false }
+                                )
+                                Divider()
+                                DropdownMenuItem(
+                                    text = { Text("Insumo Urea bajo en stock", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) },
+                                    onClick = { showNotifications = false }
+                                )
+                            }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFF3EFE7)
-                    )
+                    }
                 )
             }
         ) { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
-                when(selectedTab) {
+                when (selectedTab) {
                     0 -> DashboardHomeScreen()
                     1 -> com.agroflow.feature.inventory.presentation.ui.InventoryScreen(personnelViewModel)
                     2 -> com.agroflow.feature.personnel.presentation.ui.PersonnelScreen(personnelViewModel)
@@ -156,8 +183,23 @@ fun DashboardScreen(onLogout: () -> Unit) {
                     5 -> com.agroflow.feature.sales.presentation.ui.SalesScreen(personnelViewModel)
                     6 -> com.agroflow.feature.finance.presentation.ui.FinanceScreen(personnelViewModel)
                     7 -> com.agroflow.feature.profile.presentation.ui.ProfileEditScreen(onLogout)
+                    8 -> FincaManagementScreen(personnelViewModel)
                 }
             }
+        }
+        
+        // Startup Finca Dialog
+        if (personnelViewModel.selectedFinca == null && selectedTab != 8) {
+            AlertDialog(
+                onDismissRequest = {}, // Force selection
+                confirmButton = {
+                    Button(onClick = { selectedTab = 8 }) {
+                        Text("Ir a Fincas")
+                    }
+                },
+                title = { Text("¡Bienvenido a AgroFlow!") },
+                text = { Text("Para empezar a usar el sistema, debes crear o seleccionar una finca activa.") }
+            )
         }
     }
 }
