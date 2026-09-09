@@ -43,9 +43,9 @@ fun FincaManagementScreen(viewModel: PersonnelViewModel) {
                 Text("Nueva Finca")
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         if (viewModel.fincas.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("No tienes fincas registradas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -63,18 +63,28 @@ fun FincaManagementScreen(viewModel: PersonnelViewModel) {
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = finca.nombre,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                                )
+                        // Delete button when a finca is selected
+                        if (isSelected) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                Button(
+                                    onClick = { viewModel.deleteFinca(finca.id) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                ) {
+                                    Text("Eliminar")
+                                }
                             }
+                        }
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = finca.nombre,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                            )
                             if (isSelected) {
                                 Text("✅ Seleccionada", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                             } else {
@@ -90,9 +100,9 @@ fun FincaManagementScreen(viewModel: PersonnelViewModel) {
         }
     }
 
+    // Dialog for creating a new finca
     if (showCreateFincaDialog) {
         var nombre by remember { mutableStateOf("") }
-
         AlertDialog(
             onDismissRequest = { showCreateFincaDialog = false },
             title = { Text("Nueva Finca") },

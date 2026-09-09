@@ -131,7 +131,7 @@ class PersonnelViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val request = com.agroflow.feature.auth.data.CreateUserRequest(nombre, correo, clave, rolId)
-                val response = RetrofitClient.userApi.createAgricultor(request)
+                val response = RetrofitClient.userApi.createCliente(request)
                 if (response.isSuccessful) {
                     selectedFinca?.let { loadTrabajadores(it.id) }
                 }
@@ -170,4 +170,5 @@ class PersonnelViewModel : ViewModel() {
             }
         }
     }
+
 }

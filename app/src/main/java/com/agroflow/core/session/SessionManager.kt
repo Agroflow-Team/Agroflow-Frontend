@@ -22,6 +22,7 @@ object SessionManager {
     const val ROLE_TRABAJADOR = "7896dd16-8aa2-4161-ba08-afe874300fe5"
     const val ROLE_CLIENTE = "a42f1efb-78bd-45e4-8a95-7b1c863663bf"
 
+
     // Configurable base URL for testing
     var baseUrl by mutableStateOf("https://agroflow-backend-sena.azurewebsites.net/")
 
