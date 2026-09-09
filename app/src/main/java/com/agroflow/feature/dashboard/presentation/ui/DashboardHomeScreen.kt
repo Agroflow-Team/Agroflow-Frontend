@@ -8,8 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -135,11 +134,58 @@ fun DashboardHomeScreen() {
                     color = Color(0xFF1C1C1E),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(promotions) { promo ->
-                        PromotionCard(title = promo.first, discount = promo.second)
+                val vitrinaViewModel: com.agroflow.feature.vitrina.presentation.VitrinaViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val publicaciones by vitrinaViewModel.publicacionesActivas.collectAsState()
+
+                LaunchedEffect(Unit) {
+                    vitrinaViewModel.loadPublicacionesActivas()
+                }
+
+                if (publicaciones.isEmpty()) {
+                    Text("No hay productos en el catálogo actualmente.", color = Color.Gray, modifier = Modifier.padding(top = 8.dp))
+                } else {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(publicaciones) { pub ->
+                            Card(
+                                modifier = Modifier
+                                    .width(200.dp)
+                                    .height(130.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF2C7A4B))
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(16.dp),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = pub.tituloProducto,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                        maxLines = 2,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "$${pub.precio}",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        color = Color(0xFFFFD60A),
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                    Text(
+                                        text = "Disp: ${pub.cantidadDisponible}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.White.copy(alpha = 0.8f)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

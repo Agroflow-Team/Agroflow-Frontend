@@ -78,7 +78,25 @@ class AuthViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     onSuccess()
                 } else {
-                    onError("Error al registrar: ${response.code()}")
+                    val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                    onError("Error ${response.code()}: $errorBody")
+                }
+            } catch (e: Exception) {
+                onError("Error de conexión: ${e.message}")
+            }
+        }
+    }
+
+    fun updateUserProfile(id: String, nombre: String, telefono: String, direccion: String, fotoUrl: String?, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val request = com.agroflow.feature.auth.data.UpdateUserRequest(nombre, telefono, direccion, fotoUrl)
+                val response = RetrofitClient.userApi.updateUser(id, request)
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                    onError("Error ${response.code()}: $errorBody")
                 }
             } catch (e: Exception) {
                 onError("Error de conexión: ${e.message}")

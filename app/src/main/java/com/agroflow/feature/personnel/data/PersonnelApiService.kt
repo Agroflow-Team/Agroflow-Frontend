@@ -15,6 +15,9 @@ interface PersonnelApiService {
     @POST("api/fincas")
     suspend fun createFinca(@Body request: CreateFincaRequest): Response<Finca>
 
+    @DELETE("api/fincas/{id}")
+    suspend fun deleteFinca(@Path("id") id: String): Response<Void>
+
     @GET("api/trabajadores")
     suspend fun getTrabajadores(): Response<List<Trabajador>>
 

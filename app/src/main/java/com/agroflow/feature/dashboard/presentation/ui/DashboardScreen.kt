@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
@@ -66,6 +68,7 @@ fun DashboardScreen(onLogout: () -> Unit) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .verticalScroll(androidx.compose.foundation.rememberScrollState())
                         .padding(16.dp)
                 ) {
                     // Header section

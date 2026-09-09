@@ -18,6 +18,11 @@ import com.agroflow.feature.personnel.presentation.PersonnelViewModel
 @Composable
 fun FincaManagementScreen(viewModel: PersonnelViewModel) {
     var showCreateFincaDialog by remember { mutableStateOf(false) }
+    var fincaToDelete by remember { mutableStateOf<com.agroflow.feature.personnel.data.Finca?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadFincas()
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(
@@ -75,6 +80,9 @@ fun FincaManagementScreen(viewModel: PersonnelViewModel) {
                             } else {
                                 Text("Seleccionar", color = MaterialTheme.colorScheme.primary)
                             }
+                            IconButton(onClick = { fincaToDelete = finca }) {
+                                Text("🗑️")
+                            }
                         }
                     }
                 }
@@ -109,6 +117,43 @@ fun FincaManagementScreen(viewModel: PersonnelViewModel) {
             dismissButton = {
                 TextButton(onClick = { showCreateFincaDialog = false }) {
                     Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    fincaToDelete?.let { finca ->
+        AlertDialog(
+            onDismissRequest = { fincaToDelete = null },
+            title = { Text("Eliminar Finca") },
+            text = { Text("¿Estás seguro de que deseas eliminar la finca '${finca.nombre}'? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteFinca(finca.id)
+                        fincaToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { fincaToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (viewModel.deleteError != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearDeleteError() },
+            title = { Text("Error al eliminar", color = MaterialTheme.colorScheme.error) },
+            text = { Text(viewModel.deleteError!!) },
+            confirmButton = {
+                Button(onClick = { viewModel.clearDeleteError() }) {
+                    Text("Aceptar")
                 }
             }
         )

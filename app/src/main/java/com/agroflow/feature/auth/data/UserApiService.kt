@@ -25,4 +25,14 @@ interface UserApiService {
 
     @POST("api/users/admin/create")
     suspend fun createAdminUser(@Body request: CreateUserRequest): Response<CreateUserResponse>
+
+    @retrofit2.http.PUT("api/users/{id}")
+    suspend fun updateUser(@retrofit2.http.Path("id") id: String, @Body request: UpdateUserRequest): Response<Void>
 }
+
+data class UpdateUserRequest(
+    val nombre: String,
+    val telefono: String,
+    val direccion: String,
+    val fotoPerfilUrl: String?
+)

@@ -17,16 +17,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.agroflow.core.session.SessionManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
-fun ProfileEditScreen(onLogout: () -> Unit) {
+fun ProfileEditScreen(
+    onLogout: () -> Unit,
+    viewModel: com.agroflow.feature.auth.presentation.AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     val scrollState = rememberScrollState()
 
-    var nombre by remember { mutableStateOf(SessionManager.userEmail?.substringBefore("@") ?: "Agricultor") }
+    var nombre by remember { mutableStateOf(SessionManager.userName ?: SessionManager.userEmail?.substringBefore("@") ?: "Agricultor") }
     var email by remember { mutableStateOf(SessionManager.userEmail ?: "") }
-    var telefono by remember { mutableStateOf("") }
-    var direccion by remember { mutableStateOf("") }
+    var telefono by remember { mutableStateOf(SessionManager.userPhone ?: "") }
+    var direccion by remember { mutableStateOf(SessionManager.userAddress ?: "") }
     var savedMessage by remember { mutableStateOf<String?>(null) }
+    var photoUri by remember { mutableStateOf<android.net.Uri?>(SessionManager.userPhotoUri?.let { android.net.Uri.parse(it) }) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> 
+            if (uri != null) {
+                photoUri = uri
+            }
+        }
+    )
 
     val textFieldColors = TextFieldDefaults.colors(
         focusedContainerColor = Color(0xFFF3EFE7),
@@ -56,13 +73,26 @@ fun ProfileEditScreen(onLogout: () -> Unit) {
                 .size(120.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF2C7A4B).copy(alpha = 0.15f))
-                .clickable { /* TODO: Open gallery picker */ },
+                .clickable {
+                    photoPickerLauncher.launch(
+                        androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "👤",
-                fontSize = 48.sp
-            )
+            if (photoUri != null) {
+                AsyncImage(
+                    model = photoUri,
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = "👤",
+                    fontSize = 48.sp
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -207,12 +237,41 @@ fun ProfileEditScreen(onLogout: () -> Unit) {
             )
         }
 
+        var isSaving by remember { mutableStateOf(false) }
+
         // Save Button
-        Button(
-            onClick = {
-                // Save locally for now
-                savedMessage = "✅ Perfil actualizado correctamente"
-            },
+        if (isSaving) {
+            CircularProgressIndicator(color = Color(0xFF2C7A4B))
+        } else {
+            Button(
+                onClick = {
+                    if (SessionManager.userId != null) {
+                        isSaving = true
+                        viewModel.updateUserProfile(
+                            id = SessionManager.userId!!,
+                            nombre = nombre,
+                            telefono = telefono,
+                            direccion = direccion,
+                            fotoUrl = photoUri?.toString(),
+                            onSuccess = {
+                                isSaving = false
+                                SessionManager.userName = nombre
+                                SessionManager.userPhone = telefono
+                                SessionManager.userAddress = direccion
+                                if (photoUri != null) {
+                                    SessionManager.userPhotoUri = photoUri.toString()
+                                }
+                                savedMessage = "✅ Perfil actualizado en la base de datos"
+                            },
+                            onError = { error ->
+                                isSaving = false
+                                savedMessage = error
+                            }
+                        )
+                    } else {
+                        savedMessage = "Error: ID de usuario no encontrado"
+                    }
+                },
             shape = RoundedCornerShape(25.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B)),
             modifier = Modifier
@@ -224,6 +283,7 @@ fun ProfileEditScreen(onLogout: () -> Unit) {
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = Color.White
             )
+        }
         }
 
         Spacer(modifier = Modifier.height(16.dp))

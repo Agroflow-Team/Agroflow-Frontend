@@ -26,6 +26,10 @@ class PersonnelViewModel : ViewModel() {
     var trabajadores by mutableStateOf<List<Trabajador>>(emptyList())
         private set
 
+    init {
+        loadFincas()
+    }
+
     // Selection state to keep context for other screens
     var selectedFinca by mutableStateOf<Finca?>(null)
     var selectedTrabajador by mutableStateOf<Trabajador?>(null)
@@ -59,6 +63,33 @@ class PersonnelViewModel : ViewModel() {
             }
         }
     }
+
+    var deleteError by mutableStateOf<String?>(null)
+        private set
+
+    fun clearDeleteError() {
+        deleteError = null
+    }
+
+    fun deleteFinca(id: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.personnelApi.deleteFinca(id)
+                if (response.isSuccessful) {
+                    if (selectedFinca?.id == id) {
+                        selectedFinca = null
+                    }
+                    loadFincas()
+                } else {
+                    deleteError = "No se pudo eliminar la finca. Es posible que tenga trabajadores o ventas asociadas (Código: ${response.code()})."
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                deleteError = "Error de conexión: ${e.message}"
+            }
+        }
+    }
+
 
     fun loadTrabajadores(fincaId: String? = null) {
         viewModelScope.launch {
