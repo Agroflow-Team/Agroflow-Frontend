@@ -206,8 +206,8 @@ fun FinanceScreen(personnelViewModel: PersonnelViewModel, financeViewModel: Fina
                         placeholder = { Text("Categoría (ej. Venta, Salario)") },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
@@ -222,8 +222,8 @@ fun FinanceScreen(personnelViewModel: PersonnelViewModel, financeViewModel: Fina
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),

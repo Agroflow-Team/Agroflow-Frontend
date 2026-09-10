@@ -169,8 +169,8 @@ fun SalesScreen(
                         placeholder = { Text("Producto (ej. Aguacate Hass)") },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
@@ -184,8 +184,8 @@ fun SalesScreen(
                         placeholder = { Text("Cantidad (ej. 100 kg)") },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
@@ -200,8 +200,8 @@ fun SalesScreen(
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),

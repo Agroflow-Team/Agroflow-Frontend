@@ -24,6 +24,8 @@ import com.agroflow.feature.tasks.presentation.TaskUiState
 import com.agroflow.feature.tasks.data.TaskStatus
 import com.agroflow.feature.tasks.data.CreateTaskRequest
 import com.agroflow.feature.tasks.data.UpdateProgressRequest
+import com.agroflow.feature.tasks.data.Task
+import com.agroflow.feature.personnel.data.Trabajador
 
 @Composable
 fun StatusBadge(status: TaskStatus) {
@@ -165,8 +167,8 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
     if (showCreateDialog) {
         var titulo by remember { mutableStateOf("") }
         var descripcion by remember { mutableStateOf("") }
-        // Simple assignment: grab the selected worker if available, else require one.
-        val trabajador = personnelViewModel.selectedTrabajador
+        var expanded by remember { mutableStateOf(false) }
+        var trabajador by remember { mutableStateOf<Trabajador?>(null) }
         
         AlertDialog(
             shape = RoundedCornerShape(24.dp),
@@ -175,28 +177,48 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
             title = { Text("Crear Tarea", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
             text = {
                 Column {
-                    if (trabajador == null) {
-                        Text(
-                            text = "Por favor, selecciona también un trabajador en la pantalla de Personal antes de crear una tarea.",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    ) {
+                        TextField(
+                            value = trabajador?.nombreCompleto ?: "Seleccionar Empleado",
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            colors = ExposedDropdownMenuDefaults.textFieldColors(
+                                focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                                unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
                         )
-                    } else {
-                        Text(
-                            text = "Asignado a: ${trabajador.nombreCompleto}",
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            personnelViewModel.trabajadores.forEach { t ->
+                                DropdownMenuItem(
+                                    text = { Text(t.nombreCompleto) },
+                                    onClick = {
+                                        trabajador = t
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
                     }
-                    Spacer(Modifier.height(8.dp))
                     TextField(
                         value = titulo, 
                         onValueChange = { titulo = it }, 
                         placeholder = { Text("Título de la tarea") },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                             disabledIndicatorColor = Color.Transparent
@@ -210,8 +232,8 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
                         onValueChange = { descripcion = it }, 
                         placeholder = { Text("Descripción") },
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                             disabledIndicatorColor = Color.Transparent
@@ -224,10 +246,11 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
             confirmButton = {
                 Button(
                     onClick = {
-                        if (trabajador != null && titulo.isNotBlank()) {
+                        val t = trabajador
+                        if (t != null && titulo.isNotBlank()) {
                             val request = CreateTaskRequest(
                                 fincaId = finca!!.id,
-                                trabajadorId = trabajador.id,
+                                trabajadorId = t.id,
                                 loteId = null,
                                 titulo = titulo,
                                 descripcion = descripcion,
@@ -258,9 +281,9 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
 fun TaskColumn(
     title: String,
     headerColor: Color,
-    tasks: List<com.agroflow.feature.tasks.data.Task>,
-    onMoveToInProgress: ((com.agroflow.feature.tasks.data.Task) -> Unit)?,
-    onMoveToCompleted: ((com.agroflow.feature.tasks.data.Task) -> Unit)?
+    tasks: List<Task>,
+    onMoveToInProgress: ((Task) -> Unit)?,
+    onMoveToCompleted: ((Task) -> Unit)?
 ) {
     Column(
         modifier = Modifier

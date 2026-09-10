@@ -25,7 +25,17 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun DashboardHomeScreen() {
+fun DashboardHomeScreen(onNavigateToTab: (Int) -> Unit = {}) {
+    val financeViewModel: com.agroflow.feature.finance.presentation.FinanceViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val balance = financeViewModel.balance
+
+    LaunchedEffect(com.agroflow.core.session.SessionManager.fincaId) {
+        val fId = com.agroflow.core.session.SessionManager.fincaId
+        if (fId != null) {
+            financeViewModel.loadBalance(fId)
+        }
+    }
+
     val currentDate = remember {
         SimpleDateFormat("EEEE, d 'de' MMMM yyyy", Locale("es", "ES")).format(Date())
     }
@@ -89,18 +99,19 @@ fun DashboardHomeScreen() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[0].first, title = summaryCards[0].second, value = summaryCards[0].third)
-                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[1].first, title = summaryCards[1].second, value = summaryCards[1].third)
+                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[0].first, title = summaryCards[0].second, value = summaryCards[0].third, onClick = { onNavigateToTab(4) })
+                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[1].first, title = summaryCards[1].second, value = summaryCards[1].third, onClick = { onNavigateToTab(2) })
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[2].first, title = summaryCards[2].second, value = summaryCards[2].third)
-                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[3].first, title = summaryCards[3].second, value = summaryCards[3].third)
+                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[2].first, title = summaryCards[2].second, value = summaryCards[2].third, onClick = { onNavigateToTab(3) })
+                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[3].first, title = summaryCards[3].second, value = summaryCards[3].third, onClick = { onNavigateToTab(6) })
                 }
             }
         }
+
 
         // 3. Consumption chart section
         item {
@@ -118,7 +129,18 @@ fun DashboardHomeScreen() {
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Box(modifier = Modifier.padding(16.dp)) {
-                        WeeklyConsumptionChart()
+                        val transactions = balance?.transacciones ?: emptyList()
+                        val chartData = FloatArray(7) { 0f }
+                        // Basic mock logic: fill the chart based on recent transactions amounts
+                        if (transactions.isNotEmpty()) {
+                            val maxAmount = transactions.maxOf { it.montoTotal }.toFloat().coerceAtLeast(1f)
+                            transactions.take(7).forEachIndexed { index, t ->
+                                chartData[index % 7] += (t.montoTotal.toFloat() / maxAmount).coerceAtMost(1f)
+                            }
+                        } else {
+                            // If no data, show empty
+                        }
+                        WeeklyConsumptionChart(chartData.toList().map { it.coerceIn(0.1f, 1f) }.takeIf { transactions.isNotEmpty() } ?: listOf(0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f))
                     }
                 }
             }
@@ -196,12 +218,14 @@ fun DashboardHomeScreen() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SummaryCard(modifier: Modifier = Modifier, icon: String, title: String, value: String) {
+fun SummaryCard(modifier: Modifier = Modifier, icon: String, title: String, value: String, onClick: () -> Unit = {}) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -267,8 +291,7 @@ fun NotificationCard(message: String, time: String) {
 }
 
 @Composable
-fun WeeklyConsumptionChart() {
-    val data = listOf(0.4f, 0.7f, 0.3f, 0.8f, 0.5f, 0.9f, 0.6f)
+fun WeeklyConsumptionChart(data: List<Float> = listOf(0.4f, 0.7f, 0.3f, 0.8f, 0.5f, 0.9f, 0.6f)) {
     val days = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
 
     Column(modifier = Modifier.fillMaxWidth()) {

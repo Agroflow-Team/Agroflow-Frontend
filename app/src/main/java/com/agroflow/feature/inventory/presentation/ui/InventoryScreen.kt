@@ -40,12 +40,14 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Text("Inventario de ${finca.nombre}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground)
-            Button(
-                onClick = { showCreateDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
-            ) {
-                Text("Añadir", color = MaterialTheme.colorScheme.onPrimary)
+            if (com.agroflow.core.session.SessionManager.roleId != com.agroflow.core.session.SessionManager.ROLE_TRABAJADOR) {
+                Button(
+                    onClick = { showCreateDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+                ) {
+                    Text("Añadir", color = MaterialTheme.colorScheme.onPrimary)
+                }
             }
         }
         
@@ -66,12 +68,12 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
             }
         }
 
-        LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
+        LazyColumn {
             items(inventoryViewModel.items) { item ->
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),
                     border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
                 ) {
                     Row(
@@ -156,8 +158,8 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
                         placeholder = { Text("Nombre del ítem") },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
@@ -173,8 +175,8 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
@@ -189,8 +191,8 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
                         placeholder = { Text("Unidad de medida (ej. kg, litros)") },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
@@ -250,8 +252,8 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
                         placeholder = { Text("Nombre del ítem") },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
@@ -267,8 +269,8 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
@@ -283,8 +285,8 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
                         placeholder = { Text("Unidad de medida") },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
                             focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                             disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent

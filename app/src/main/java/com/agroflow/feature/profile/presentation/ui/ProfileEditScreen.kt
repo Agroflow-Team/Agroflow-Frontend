@@ -103,6 +103,14 @@ fun ProfileEditScreen(
             color = Color(0xFF2C7A4B)
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = SessionManager.userName ?: SessionManager.userEmail?.substringBefore("@") ?: "Usuario",
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = Color(0xFF1C1C1E)
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         // Name Field

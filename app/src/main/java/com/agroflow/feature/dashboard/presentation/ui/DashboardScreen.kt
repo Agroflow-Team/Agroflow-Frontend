@@ -134,7 +134,19 @@ fun DashboardScreen(onLogout: () -> Unit) {
             }
         }
     ) {
+        val snackbarHostState = remember { SnackbarHostState() }
+        
+        LaunchedEffect(Unit) {
+            // Delay 2 seconds to simulate receiving a notification
+            kotlinx.coroutines.delay(2000)
+            snackbarHostState.showSnackbar(
+                message = "🔔 Nueva notificación: Se regó el cultivo de tomate",
+                duration = SnackbarDuration.Long // Will be around 4-10s
+            )
+        }
+
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = {
@@ -178,7 +190,11 @@ fun DashboardScreen(onLogout: () -> Unit) {
         ) { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
                 when (selectedTab) {
-                    0 -> DashboardHomeScreen()
+                    0 -> DashboardHomeScreen(
+                        onNavigateToTab = { tabIndex ->
+                            selectedTab = tabIndex
+                        }
+                    )
                     1 -> com.agroflow.feature.inventory.presentation.ui.InventoryScreen(personnelViewModel)
                     2 -> com.agroflow.feature.personnel.presentation.ui.PersonnelScreen(personnelViewModel)
                     3 -> com.agroflow.feature.tasks.presentation.ui.TasksScreen(personnelViewModel)
