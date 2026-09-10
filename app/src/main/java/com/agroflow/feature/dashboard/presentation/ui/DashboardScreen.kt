@@ -48,13 +48,15 @@ fun DashboardScreen(onLogout: () -> Unit) {
     }
 
     val menuItems = listOf(
-        "📊 Dashboard" to 0,
+        "📊 Inicio / Dashboard Principal" to 0,
+        "🌱 Mis Lotes / Cultivos" to 9,
+        "📡 Sensores e IoT" to 10,
         "📦 Inventario" to 1,
+        "📈 Finanzas y Reportes" to 6,
         "👥 Gestión de Empleados" to 2,
         "✅ Gestión de Tareas" to 3,
         "🏷️ Catálogo" to 4,
         "💰 Ventas" to 5,
-        "📈 Balance Financiero" to 6,
         "🏡 Fincas" to 8
     )
 
@@ -203,6 +205,8 @@ fun DashboardScreen(onLogout: () -> Unit) {
                     6 -> com.agroflow.feature.finance.presentation.ui.FinanceScreen(personnelViewModel)
                     7 -> com.agroflow.feature.profile.presentation.ui.ProfileEditScreen(onLogout)
                     8 -> FincaManagementScreen(personnelViewModel)
+                    9 -> PlaceholderScreen("Mis Lotes / Cultivos", "Aquí podrás gestionar los lotes, ver qué cultivos tienes sembrados en cada uno y su ciclo de crecimiento.")
+                    10 -> PlaceholderScreen("Sensores e IoT", "Aquí podrás monitorear la humedad, clima y activar sistemas de riego de forma remota.")
                 }
             }
         }
@@ -219,6 +223,20 @@ fun DashboardScreen(onLogout: () -> Unit) {
                 title = { Text("¡Bienvenido a AgroFlow!") },
                 text = { Text("Para empezar a usar el sistema, debes crear o seleccionar una finca activa.") }
             )
+        }
+    }
+}
+
+
+@Composable
+fun PlaceholderScreen(title: String, description: String) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
+            Text("🚧", fontSize = 64.sp)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color(0xFF2C7A4B))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(description, style = MaterialTheme.typography.bodyLarge, textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Color.Gray)
         }
     }
 }

@@ -1,334 +1,501 @@
 package com.agroflow.feature.dashboard.presentation.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.agroflow.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// Colors
+private val AgroFlowGreen = Color(0xFF2C7A4B)
+private val AgroFlowBackground = Color(0xFFF3EFE7)
+private val AgroFlowSurface = Color(0xFFFFFFFF)
+private val AppleDarkGrey = Color(0xFF1C1C1E)
+private val AppleTextSecondary = Color(0xFF8E8E93)
+private val AppleRed = Color(0xFFFF453A)
+private val AppleGreen = Color(0xFF30D158)
+private val AppleYellow = Color(0xFFFFD60A)
+
 @Composable
 fun DashboardHomeScreen(onNavigateToTab: (Int) -> Unit = {}) {
-    val financeViewModel: com.agroflow.feature.finance.presentation.FinanceViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-    val balance = financeViewModel.balance
-
-    LaunchedEffect(com.agroflow.core.session.SessionManager.fincaId) {
-        val fId = com.agroflow.core.session.SessionManager.fincaId
-        if (fId != null) {
-            financeViewModel.loadBalance(fId)
-        }
-    }
-
     val currentDate = remember {
-        SimpleDateFormat("EEEE, d 'de' MMMM yyyy", Locale("es", "ES")).format(Date())
-    }
-
-    val summaryCards = remember {
-        listOf(
-            Triple("📦", "Productos", "124"),
-            Triple("👥", "Empleados", "12"),
-            Triple("✅", "Tareas Pendientes", "5"),
-            Triple("💰", "Balance", "$4,500")
-        )
-    }
-
-    val promotions = remember {
-        listOf(
-            "Semillas de Maíz" to "20%",
-            "Fertilizante NPK" to "15%",
-            "Tractor Rental" to "10%",
-            "Sistema de Riego" to "25%"
-        )
-    }
-
-    val notifications = remember {
-        listOf(
-            "Nuevo empleado registrado" to "Hace 10 min",
-            "Cosecha de tomate completada" to "Hace 2 horas",
-            "Inventario de fertilizantes bajo" to "Hace 5 horas",
-            "Pago recibido por 100 kg papa" to "Ayer",
-            "Tarea 'Riego sector A' asignada" to "Ayer"
-        )
+        SimpleDateFormat("EEEE, d MMMM yyyy", Locale("es", "ES")).format(Date())
     }
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF3EFE7))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .background(AgroFlowBackground),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Welcome header
+        // A. Welcome Header
         item {
-            Column {
-                Text(
-                    text = "Bienvenido a AgroFlow",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1C1C1E)
-                )
-                Text(
-                    text = currentDate.replaceFirstChar { it.uppercase() },
-                    fontSize = 14.sp,
-                    color = Color(0xFF8E8E93)
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "¡Hola, Productor!",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppleDarkGrey
+                    )
+                    Text(
+                        text = currentDate.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                        fontSize = 14.sp,
+                        color = AppleTextSecondary
+                    )
+                }
+                Surface(
+                    shape = CircleShape,
+                    modifier = Modifier.size(48.dp),
+                    color = AgroFlowSurface
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.img_logo),
+                        contentDescription = "Perfil del Productor",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
         }
 
-        // 2. Summary cards row
+        // B. Panel Superior (KPIs y Alertas Rápidas)
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[0].first, title = summaryCards[0].second, value = summaryCards[0].third, onClick = { onNavigateToTab(4) })
-                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[1].first, title = summaryCards[1].second, value = summaryCards[1].third, onClick = { onNavigateToTab(2) })
+                    KpiCard(
+                        modifier = Modifier.weight(1f),
+                        icon = "☀️",
+                        title = "Clima",
+                        value = "24°C - 10% Lluvia\nAlerta: Ninguna",
+                        valueColor = AppleDarkGrey
+                    )
+                    KpiCard(
+                        modifier = Modifier.weight(1f),
+                        icon = "💧",
+                        title = "Riego",
+                        value = "Humedad 60%\nSistema: Activo",
+                        valueColor = AppleDarkGrey
+                    )
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[2].first, title = summaryCards[2].second, value = summaryCards[2].third, onClick = { onNavigateToTab(3) })
-                    SummaryCard(modifier = Modifier.weight(1f), icon = summaryCards[3].first, title = summaryCards[3].second, value = summaryCards[3].third, onClick = { onNavigateToTab(6) })
+                    KpiCard(
+                        modifier = Modifier.weight(1f),
+                        icon = "⚠️",
+                        title = "Alertas",
+                        value = "Riesgo de helada (Lote B)\nBajo nivel de fertilizante",
+                        valueColor = AppleRed
+                    )
+                    KpiCard(
+                        modifier = Modifier.weight(1f),
+                        icon = "🌾",
+                        title = "Cosecha",
+                        value = "75% de meta\n(Temporada)",
+                        valueColor = AppleDarkGrey
+                    )
                 }
             }
         }
 
+        // C. Módulos Visuales (Body)
 
-        // 3. Consumption chart section
+        // 1. Mapa de Parcelas
         item {
-            Column {
-                Text(
-                    text = "Consumo Semanal",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1C1C1E),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Box(modifier = Modifier.padding(16.dp)) {
-                        val transactions = balance?.transacciones ?: emptyList()
-                        val chartData = FloatArray(7) { 0f }
-                        // Basic mock logic: fill the chart based on recent transactions amounts
-                        if (transactions.isNotEmpty()) {
-                            val maxAmount = transactions.maxOf { it.montoTotal }.toFloat().coerceAtLeast(1f)
-                            transactions.take(7).forEachIndexed { index, t ->
-                                chartData[index % 7] += (t.montoTotal.toFloat() / maxAmount).coerceAtMost(1f)
-                            }
-                        } else {
-                            // If no data, show empty
-                        }
-                        WeeklyConsumptionChart(chartData.toList().map { it.coerceIn(0.1f, 1f) }.takeIf { transactions.isNotEmpty() } ?: listOf(0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f))
-                    }
-                }
+            SectionCard(title = "Mapa de Parcelas") {
+                ParcelMapCanvas()
             }
         }
 
-        // 4. Promotions section
+        // 2. Gráfico de Consumo de Recursos
         item {
-            Column {
-                Text(
-                    text = "Promociones",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1C1C1E),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                val vitrinaViewModel: com.agroflow.feature.vitrina.presentation.VitrinaViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-                val publicaciones by vitrinaViewModel.publicacionesActivas.collectAsState()
-
-                LaunchedEffect(Unit) {
-                    vitrinaViewModel.loadPublicacionesActivas()
-                }
-
-                if (publicaciones.isEmpty()) {
-                    Text("No hay productos en el catálogo actualmente.", color = Color.Gray, modifier = Modifier.padding(top = 8.dp))
-                } else {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(publicaciones) { pub ->
-                            Card(
-                                modifier = Modifier
-                                    .width(200.dp)
-                                    .height(130.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF2C7A4B))
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = pub.tituloProducto,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                        maxLines = 2,
-                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "$${pub.precio}",
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        color = Color(0xFFFFD60A),
-                                        fontWeight = FontWeight.ExtraBold
-                                    )
-                                    Text(
-                                        text = "Disp: ${pub.cantidadDisponible}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.White.copy(alpha = 0.8f)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+            SectionCard(title = "Consumo de Recursos") {
+                ResourceConsumptionChart()
             }
         }
 
+        // 3. Gestión de Tareas y Cuadrillas
+        item {
+            SectionCard(title = "Tareas del Día") {
+                DailyTasksList()
+            }
+        }
 
-        item { Spacer(modifier = Modifier.height(16.dp)) }
+        // 4. Rendimiento de Cultivos
+        item {
+            SectionCard(title = "Proyección de Rendimiento") {
+                CropYieldChart()
+            }
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SummaryCard(modifier: Modifier = Modifier, icon: String, title: String, value: String, onClick: () -> Unit = {}) {
+fun KpiCard(
+    modifier: Modifier = Modifier,
+    icon: String,
+    title: String,
+    value: String,
+    valueColor: Color
+) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AgroFlowSurface),
         shape = RoundedCornerShape(16.dp),
-        onClick = onClick
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
-            Text(text = icon, fontSize = 24.sp)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = title, fontSize = 14.sp, color = Color(0xFF8E8E93))
-            Text(text = value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1C1C1E))
-        }
-    }
-}
-
-@Composable
-fun PromotionCard(title: String, discount: String) {
-    val gradient = Brush.horizontalGradient(
-        colors = listOf(Color(0xFF2C7A4B), Color(0xFFA5D6A7))
-    )
-    Box(
-        modifier = Modifier
-            .width(200.dp)
-            .background(brush = gradient, shape = RoundedCornerShape(16.dp))
-            .padding(16.dp)
-    ) {
-        Column {
-            Text(
-                text = title,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = icon, fontSize = 20.sp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AppleTextSecondary
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "$discount Dcto",
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold
+                text = value,
+                fontSize = 13.sp,
+                color = valueColor,
+                lineHeight = 18.sp
             )
         }
     }
 }
 
 @Composable
-fun NotificationCard(message: String, time: String) {
+fun SectionCard(
+    title: String,
+    content: @Composable () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = AgroFlowSurface),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "🔔", fontSize = 20.sp)
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(text = message, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1C1C1E))
-                Text(text = time, fontSize = 12.sp, color = Color(0xFF8E8E93))
-            }
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = title,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = AppleDarkGrey
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            content()
         }
     }
 }
 
 @Composable
-fun WeeklyConsumptionChart(data: List<Float> = listOf(0.4f, 0.7f, 0.3f, 0.8f, 0.5f, 0.9f, 0.6f)) {
-    val days = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
+fun ParcelMapCanvas() {
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    ) {
+        val width = size.width
+        val height = size.height
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        ) {
-            val barWidth = size.width / (data.size * 2)
-            val maxBarHeight = size.height - 30.dp.toPx()
+        val lotAWidth = width * 0.45f
+        val lotAHeight = height * 0.8f
+        
+        // Lote A (Verde - Saludable)
+        drawRoundRect(
+            color = AppleGreen,
+            topLeft = Offset(width * 0.05f, height * 0.1f),
+            size = Size(lotAWidth, lotAHeight),
+            cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx())
+        )
 
-            data.forEachIndexed { index, value ->
-                val barHeight = maxBarHeight * value
-                val x = index * (size.width / data.size) + (size.width / data.size - barWidth) / 2
-                val y = maxBarHeight - barHeight
+        // Lote B (Rojo - Peste/Enfermedad)
+        drawRoundRect(
+            color = AppleRed,
+            topLeft = Offset(width * 0.55f, height * 0.1f),
+            size = Size(width * 0.4f, height * 0.35f),
+            cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx())
+        )
 
-                drawRoundRect(
-                    color = Color(0xFF2C7A4B),
-                    topLeft = Offset(x, y),
-                    size = Size(barWidth, barHeight),
-                    cornerRadius = CornerRadius(4.dp.toPx())
-                )
-            }
+        // Lote C (Amarillo - Estrés Hídrico)
+        drawRoundRect(
+            color = AppleYellow,
+            topLeft = Offset(width * 0.55f, height * 0.55f),
+            size = Size(width * 0.4f, height * 0.35f),
+            cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx())
+        )
+
+        val paint = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            textSize = 14.sp.toPx()
+            textAlign = android.graphics.Paint.Align.CENTER
+            isFakeBoldText = true
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            days.forEach { day ->
-                Text(
-                    text = day,
-                    fontSize = 12.sp,
-                    color = Color(0xFF8E8E93),
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
-                )
+
+        drawContext.canvas.nativeCanvas.drawText(
+            "Lote A",
+            width * 0.05f + lotAWidth / 2,
+            height * 0.1f + lotAHeight / 2 + 14.sp.toPx() / 3,
+            paint
+        )
+
+        drawContext.canvas.nativeCanvas.drawText(
+            "Lote B",
+            width * 0.55f + (width * 0.4f) / 2,
+            height * 0.1f + (height * 0.35f) / 2 + 14.sp.toPx() / 3,
+            paint
+        )
+
+        drawContext.canvas.nativeCanvas.drawText(
+            "Lote C",
+            width * 0.55f + (width * 0.4f) / 2,
+            height * 0.55f + (height * 0.35f) / 2 + 14.sp.toPx() / 3,
+            paint
+        )
+    }
+}
+
+@Composable
+fun ResourceConsumptionChart() {
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+            .padding(vertical = 8.dp)
+    ) {
+        val width = size.width
+        val height = size.height
+        val pointCount = 4
+        
+        val aguaColor = Color(0xFF0A84FF)
+        val fertColor = Color(0xFFD2691E)
+
+        val aguaPoints = listOf(0.3f, 0.5f, 0.4f, 0.7f)
+        val fertPoints = listOf(0.4f, 0.4f, 0.6f, 0.5f)
+
+        val stepX = width / (pointCount - 1)
+
+        val aguaPath = Path()
+        val fertPath = Path()
+
+        aguaPoints.forEachIndexed { index, value ->
+            val x = index * stepX
+            val y = height - (value * height)
+            if (index == 0) {
+                aguaPath.moveTo(x, y)
+            } else {
+                aguaPath.lineTo(x, y)
             }
+            drawCircle(
+                color = aguaColor,
+                radius = 4.dp.toPx(),
+                center = Offset(x, y)
+            )
         }
+
+        fertPoints.forEachIndexed { index, value ->
+            val x = index * stepX
+            val y = height - (value * height)
+            if (index == 0) {
+                fertPath.moveTo(x, y)
+            } else {
+                fertPath.lineTo(x, y)
+            }
+            drawCircle(
+                color = fertColor,
+                radius = 4.dp.toPx(),
+                center = Offset(x, y)
+            )
+        }
+
+        drawPath(
+            path = aguaPath,
+            color = aguaColor,
+            style = Stroke(width = 2.dp.toPx())
+        )
+
+        drawPath(
+            path = fertPath,
+            color = fertColor,
+            style = Stroke(width = 2.dp.toPx())
+        )
+
+        drawLine(
+            color = AppleTextSecondary.copy(alpha = 0.5f),
+            start = Offset(0f, height),
+            end = Offset(width, height),
+            strokeWidth = 1.dp.toPx()
+        )
+    }
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(modifier = Modifier
+            .size(12.dp)
+            .background(Color(0xFF0A84FF), CircleShape))
+        Spacer(modifier = Modifier.width(4.dp))
+        Text("Agua", fontSize = 12.sp, color = AppleTextSecondary)
+        Spacer(modifier = Modifier.width(16.dp))
+        Box(modifier = Modifier
+            .size(12.dp)
+            .background(Color(0xFFD2691E), CircleShape))
+        Spacer(modifier = Modifier.width(4.dp))
+        Text("Fertilizante", fontSize = 12.sp, color = AppleTextSecondary)
+    }
+}
+
+@Composable
+fun DailyTasksList() {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        TaskItem(text = "Fumigación Lote A - Juan Pérez", initialChecked = true)
+        TaskItem(text = "Revisión de Sensores Lote B - Ana Gómez", initialChecked = false)
+        TaskItem(text = "Mantenimiento Sistema Riego", initialChecked = false)
+        TaskItem(text = "Aplicación Fertilizante Lote C", initialChecked = false)
+    }
+}
+
+@Composable
+fun TaskItem(text: String, initialChecked: Boolean) {
+    var checked by remember { mutableStateOf(initialChecked) }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = { checked = it },
+            colors = CheckboxDefaults.colors(
+                checkedColor = AgroFlowGreen,
+                uncheckedColor = AppleTextSecondary
+            )
+        )
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = if (checked) AppleTextSecondary else AppleDarkGrey,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
+
+@Composable
+fun CropYieldChart() {
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+            .padding(vertical = 8.dp)
+    ) {
+        val width = size.width
+        val height = size.height
+        
+        val crops = listOf("Maíz", "Frijol", "Tomate")
+        val values = listOf(0.8f, 0.6f, 0.9f)
+        
+        val barWidth = width * 0.15f
+        val spacing = (width - (barWidth * crops.size)) / (crops.size + 1)
+        
+        val paint = android.graphics.Paint().apply {
+            color = android.graphics.Color.GRAY
+            textSize = 12.sp.toPx()
+            textAlign = android.graphics.Paint.Align.CENTER
+        }
+        
+        crops.forEachIndexed { index, name ->
+            val value = values[index]
+            val barHeight = height * 0.8f * value
+            
+            val x = spacing + (index * (barWidth + spacing))
+            val y = height * 0.8f - barHeight
+            
+            drawRoundRect(
+                color = AgroFlowGreen,
+                topLeft = Offset(x, y),
+                size = Size(barWidth, barHeight),
+                cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
+            )
+            
+            drawContext.canvas.nativeCanvas.drawText(
+                name,
+                x + barWidth / 2,
+                height,
+                paint
+            )
+            
+            drawContext.canvas.nativeCanvas.drawText(
+                "${(value * 100).toInt()}%",
+                x + barWidth / 2,
+                y - 4.dp.toPx(),
+                paint
+            )
+        }
+        
+        drawLine(
+            color = AppleTextSecondary.copy(alpha = 0.5f),
+            start = Offset(0f, height * 0.8f),
+            end = Offset(width, height * 0.8f),
+            strokeWidth = 1.dp.toPx()
+        )
     }
 }
