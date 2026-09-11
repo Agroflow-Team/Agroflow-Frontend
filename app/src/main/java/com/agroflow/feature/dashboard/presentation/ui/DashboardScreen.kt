@@ -65,7 +65,7 @@ fun DashboardScreen(onLogout: () -> Unit) {
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(280.dp),
-                drawerContainerColor = Color(0xFF2C7A4B)
+                drawerContainerColor = Color(0xFF5A714C)
             ) {
                 Column(
                     modifier = Modifier
@@ -113,9 +113,9 @@ fun DashboardScreen(onLogout: () -> Unit) {
                                 scope.launch { drawerState.close() }
                             },
                             colors = NavigationDrawerItemDefaults.colors(
-                                selectedContainerColor = Color.White.copy(alpha = 0.15f),
+                                selectedContainerColor = Color(0xFFF4E245).copy(alpha = 0.15f),
                                 unselectedContainerColor = Color.Transparent,
-                                selectedTextColor = Color.White,
+                                selectedTextColor = Color(0xFFF4E245),
                                 unselectedTextColor = Color.White.copy(alpha = 0.8f)
                             )
                         )
@@ -148,22 +148,24 @@ fun DashboardScreen(onLogout: () -> Unit) {
         }
 
         Scaffold(
+            containerColor = Color(0xFF5A714C),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = {
                         val title = menuItems.find { it.second == selectedTab }?.first ?: if(selectedTab == 7) "Mi Perfil" else "AgroFlow"
-                        Text(title)
+                        Text(title, color = Color.White)
                     },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF5A714C)),
                     actions = {
                         Box {
                             IconButton(onClick = { showNotifications = true }) {
-                                Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
+                                Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White)
                             }
                             DropdownMenu(
                                 expanded = showNotifications,

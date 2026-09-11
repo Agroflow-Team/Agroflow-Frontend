@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -49,14 +51,14 @@ import java.util.Date
 import java.util.Locale
 
 // Colors
-private val AgroFlowGreen = Color(0xFF2C7A4B)
-private val AgroFlowBackground = Color(0xFFF3EFE7)
-private val AgroFlowSurface = Color(0xFFFFFFFF)
-private val AppleDarkGrey = Color(0xFF1C1C1E)
-private val AppleTextSecondary = Color(0xFF8E8E93)
+private val OliveGreenBg = Color(0xFF5A714C)
+private val OliveGreenCard = Color(0xFF6A8256)
+private val NeonYellow = Color(0xFFF4E245)
+private val WhiteMain = Color.White
+private val WhiteSecondary = Color.White.copy(alpha = 0.7f)
 private val AppleRed = Color(0xFFFF453A)
 private val AppleGreen = Color(0xFF30D158)
-private val AppleYellow = Color(0xFFFFD60A)
+private val WaterBlue = Color(0xFF82B1FF)
 
 @Composable
 fun DashboardHomeScreen(onNavigateToTab: (Int) -> Unit = {}) {
@@ -67,11 +69,11 @@ fun DashboardHomeScreen(onNavigateToTab: (Int) -> Unit = {}) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(AgroFlowBackground),
+            .background(OliveGreenBg),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // A. Welcome Header
+        // A. Header
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -81,20 +83,25 @@ fun DashboardHomeScreen(onNavigateToTab: (Int) -> Unit = {}) {
                 Column {
                     Text(
                         text = "¡Hola, Productor!",
-                        fontSize = 24.sp,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AppleDarkGrey
+                        color = WhiteMain
                     )
-                    Text(
-                        text = currentDate.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
-                        fontSize = 14.sp,
-                        color = AppleTextSecondary
-                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "📍", fontSize = 14.sp)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Estancia El Ombú, Buenos Aires",
+                            fontSize = 14.sp,
+                            color = WhiteSecondary
+                        )
+                    }
                 }
                 Surface(
                     shape = CircleShape,
                     modifier = Modifier.size(48.dp),
-                    color = AgroFlowSurface
+                    color = OliveGreenCard
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.img_logo),
@@ -106,76 +113,38 @@ fun DashboardHomeScreen(onNavigateToTab: (Int) -> Unit = {}) {
             }
         }
 
-        // B. Panel Superior (KPIs y Alertas Rápidas)
+        // B. Weather Card
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    KpiCard(
-                        modifier = Modifier.weight(1f),
-                        icon = "☀️",
-                        title = "Clima",
-                        value = "24°C - 10% Lluvia\nAlerta: Ninguna",
-                        valueColor = AppleDarkGrey
-                    )
-                    KpiCard(
-                        modifier = Modifier.weight(1f),
-                        icon = "💧",
-                        title = "Riego",
-                        value = "Humedad 60%\nSistema: Activo",
-                        valueColor = AppleDarkGrey
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    KpiCard(
-                        modifier = Modifier.weight(1f),
-                        icon = "⚠️",
-                        title = "Alertas",
-                        value = "Riesgo de helada (Lote B)\nBajo nivel de fertilizante",
-                        valueColor = AppleRed
-                    )
-                    KpiCard(
-                        modifier = Modifier.weight(1f),
-                        icon = "🌾",
-                        title = "Cosecha",
-                        value = "75% de meta\n(Temporada)",
-                        valueColor = AppleDarkGrey
-                    )
-                }
-            }
+            WeatherCard()
         }
 
-        // C. Módulos Visuales (Body)
-
-        // 1. Mapa de Parcelas
+        // C. Categories / Filter Pills
         item {
-            SectionCard(title = "Mapa de Parcelas") {
+            CategoriesRow()
+        }
+
+        // D. Mis Lotes / Campos Card
+        item {
+            SectionCard(title = "Mis Lotes / Campos") {
                 ParcelMapCanvas()
             }
         }
 
-        // 2. Gráfico de Consumo de Recursos
+        // E. Existing Visual Modules (Tasks, Resources, Yield)
+        item {
+            SectionCard(title = "Gestión de Tareas") {
+                DailyTasksList()
+            }
+        }
+
         item {
             SectionCard(title = "Consumo de Recursos") {
                 ResourceConsumptionChart()
             }
         }
 
-        // 3. Gestión de Tareas y Cuadrillas
         item {
-            SectionCard(title = "Tareas del Día") {
-                DailyTasksList()
-            }
-        }
-
-        // 4. Rendimiento de Cultivos
-        item {
-            SectionCard(title = "Proyección de Rendimiento") {
+            SectionCard(title = "Rendimiento de Cultivos") {
                 CropYieldChart()
             }
         }
@@ -183,39 +152,83 @@ fun DashboardHomeScreen(onNavigateToTab: (Int) -> Unit = {}) {
 }
 
 @Composable
-fun KpiCard(
-    modifier: Modifier = Modifier,
-    icon: String,
-    title: String,
-    value: String,
-    valueColor: Color
-) {
+fun WeatherCard() {
     Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = AgroFlowSurface),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = OliveGreenCard),
+        shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = icon, fontSize = 20.sp)
-                Spacer(modifier = Modifier.width(8.dp))
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "34°",
+                        fontSize = 64.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = WhiteMain,
+                        lineHeight = 64.sp
+                    )
+                    Text(
+                        text = "Parcialmente nublado",
+                        fontSize = 16.sp,
+                        color = WhiteSecondary
+                    )
+                }
+                Text(text = "⛅", fontSize = 72.sp)
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                WeatherStat(icon = "💨", label = "Viento", value = "12 km/h")
+                WeatherStat(icon = "💧", label = "Humedad", value = "45%")
+                WeatherStat(icon = "🌧️", label = "Lluvia", value = "0 mm")
+                WeatherStat(icon = "🌡️", label = "Sens.", value = "36°")
+            }
+        }
+    }
+}
+
+@Composable
+fun WeatherStat(icon: String, label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = icon, fontSize = 20.sp)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = value, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = WhiteMain)
+        Text(text = label, fontSize = 12.sp, color = WhiteSecondary)
+    }
+}
+
+@Composable
+fun CategoriesRow() {
+    val categories = listOf("Todos", "Frutas", "Cereales", "Hortalizas")
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        items(categories) { category ->
+            val isSelected = category == "Todos"
+            val bgColor = if (isSelected) NeonYellow else Color.White.copy(alpha = 0.2f)
+            val textColor = if (isSelected) Color.Black else WhiteMain
+            
+            Surface(
+                color = bgColor,
+                shape = RoundedCornerShape(24.dp)
+            ) {
                 Text(
-                    text = title,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = AppleTextSecondary
+                    text = category,
+                    color = textColor,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                    fontSize = 14.sp
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = value,
-                fontSize = 13.sp,
-                color = valueColor,
-                lineHeight = 18.sp
-            )
         }
     }
 }
@@ -227,8 +240,8 @@ fun SectionCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = AgroFlowSurface),
-        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = OliveGreenCard),
+        shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -236,7 +249,7 @@ fun SectionCard(
                 text = title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = AppleDarkGrey
+                color = WhiteMain
             )
             Spacer(modifier = Modifier.height(16.dp))
             content()
@@ -273,16 +286,23 @@ fun ParcelMapCanvas() {
             cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx())
         )
 
-        // Lote C (Amarillo - Estrés Hídrico)
+        // Lote C (Amarillo Neón - Estrés Hídrico)
         drawRoundRect(
-            color = AppleYellow,
+            color = NeonYellow,
             topLeft = Offset(width * 0.55f, height * 0.55f),
             size = Size(width * 0.4f, height * 0.35f),
             cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx())
         )
 
-        val paint = android.graphics.Paint().apply {
+        val paintWhite = android.graphics.Paint().apply {
             color = android.graphics.Color.WHITE
+            textSize = 14.sp.toPx()
+            textAlign = android.graphics.Paint.Align.CENTER
+            isFakeBoldText = true
+        }
+        
+        val paintBlack = android.graphics.Paint().apply {
+            color = android.graphics.Color.BLACK
             textSize = 14.sp.toPx()
             textAlign = android.graphics.Paint.Align.CENTER
             isFakeBoldText = true
@@ -292,21 +312,21 @@ fun ParcelMapCanvas() {
             "Lote A",
             width * 0.05f + lotAWidth / 2,
             height * 0.1f + lotAHeight / 2 + 14.sp.toPx() / 3,
-            paint
+            paintWhite
         )
 
         drawContext.canvas.nativeCanvas.drawText(
             "Lote B",
             width * 0.55f + (width * 0.4f) / 2,
             height * 0.1f + (height * 0.35f) / 2 + 14.sp.toPx() / 3,
-            paint
+            paintWhite
         )
 
         drawContext.canvas.nativeCanvas.drawText(
             "Lote C",
             width * 0.55f + (width * 0.4f) / 2,
             height * 0.55f + (height * 0.35f) / 2 + 14.sp.toPx() / 3,
-            paint
+            paintBlack // Use black on neon yellow for better contrast
         )
     }
 }
@@ -323,8 +343,8 @@ fun ResourceConsumptionChart() {
         val height = size.height
         val pointCount = 4
         
-        val aguaColor = Color(0xFF0A84FF)
-        val fertColor = Color(0xFFD2691E)
+        val aguaColor = WaterBlue
+        val fertColor = NeonYellow
 
         val aguaPoints = listOf(0.3f, 0.5f, 0.4f, 0.7f)
         val fertPoints = listOf(0.4f, 0.4f, 0.6f, 0.5f)
@@ -377,7 +397,7 @@ fun ResourceConsumptionChart() {
         )
 
         drawLine(
-            color = AppleTextSecondary.copy(alpha = 0.5f),
+            color = WhiteSecondary.copy(alpha = 0.3f),
             start = Offset(0f, height),
             end = Offset(width, height),
             strokeWidth = 1.dp.toPx()
@@ -393,15 +413,15 @@ fun ResourceConsumptionChart() {
     ) {
         Box(modifier = Modifier
             .size(12.dp)
-            .background(Color(0xFF0A84FF), CircleShape))
+            .background(WaterBlue, CircleShape))
         Spacer(modifier = Modifier.width(4.dp))
-        Text("Agua", fontSize = 12.sp, color = AppleTextSecondary)
+        Text("Agua", fontSize = 12.sp, color = WhiteSecondary)
         Spacer(modifier = Modifier.width(16.dp))
         Box(modifier = Modifier
             .size(12.dp)
-            .background(Color(0xFFD2691E), CircleShape))
+            .background(NeonYellow, CircleShape))
         Spacer(modifier = Modifier.width(4.dp))
-        Text("Fertilizante", fontSize = 12.sp, color = AppleTextSecondary)
+        Text("Fertilizante", fontSize = 12.sp, color = WhiteSecondary)
     }
 }
 
@@ -426,14 +446,15 @@ fun TaskItem(text: String, initialChecked: Boolean) {
             checked = checked,
             onCheckedChange = { checked = it },
             colors = CheckboxDefaults.colors(
-                checkedColor = AgroFlowGreen,
-                uncheckedColor = AppleTextSecondary
+                checkedColor = NeonYellow,
+                checkmarkColor = Color.Black,
+                uncheckedColor = WhiteMain
             )
         )
         Text(
             text = text,
             fontSize = 14.sp,
-            color = if (checked) AppleTextSecondary else AppleDarkGrey,
+            color = if (checked) WhiteSecondary else WhiteMain,
             modifier = Modifier.padding(start = 8.dp)
         )
     }
@@ -456,10 +477,18 @@ fun CropYieldChart() {
         val barWidth = width * 0.15f
         val spacing = (width - (barWidth * crops.size)) / (crops.size + 1)
         
-        val paint = android.graphics.Paint().apply {
-            color = android.graphics.Color.GRAY
+        val paintLabels = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            alpha = (255 * 0.7f).toInt()
             textSize = 12.sp.toPx()
             textAlign = android.graphics.Paint.Align.CENTER
+        }
+        
+        val paintValues = android.graphics.Paint().apply {
+            color = android.graphics.Color.WHITE
+            textSize = 12.sp.toPx()
+            textAlign = android.graphics.Paint.Align.CENTER
+            isFakeBoldText = true
         }
         
         crops.forEachIndexed { index, name ->
@@ -470,7 +499,7 @@ fun CropYieldChart() {
             val y = height * 0.8f - barHeight
             
             drawRoundRect(
-                color = AgroFlowGreen,
+                color = NeonYellow,
                 topLeft = Offset(x, y),
                 size = Size(barWidth, barHeight),
                 cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
@@ -480,19 +509,19 @@ fun CropYieldChart() {
                 name,
                 x + barWidth / 2,
                 height,
-                paint
+                paintLabels
             )
             
             drawContext.canvas.nativeCanvas.drawText(
                 "${(value * 100).toInt()}%",
                 x + barWidth / 2,
                 y - 4.dp.toPx(),
-                paint
+                paintValues
             )
         }
         
         drawLine(
-            color = AppleTextSecondary.copy(alpha = 0.5f),
+            color = WhiteSecondary.copy(alpha = 0.3f),
             start = Offset(0f, height * 0.8f),
             end = Offset(width, height * 0.8f),
             strokeWidth = 1.dp.toPx()
