@@ -1,4 +1,4 @@
-﻿package com.agroflow.core.fcm
+package com.agroflow.core.fcm
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,47 +16,81 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // Podriamos enviar el token al backend aqui si el usuario esta logueado
-        // Pero lo haremos en el AuthViewModel al hacer login
+        // Sincronizar token automáticamente con el backend si hay sesión iniciada
+        FcmHelper.syncTokenDirectly(token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        val title = message.notification?.title ?: "Notificacion"
-        val body = message.notification?.body ?: ""
+        val title = message.notification?.title
+            ?: message.data["title"]
+            ?: "Notificación de AgroFlow"
+        val body = message.notification?.body
+            ?: message.data["body"]
+            ?: ""
 
         showNotification(title, body)
     }
 
     private fun showNotification(title: String, message: String) {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            putExtra("NOTIFICATION_CLICKED", true)
+        }
+        
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+            this, 
+            0, 
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val channelId = "Agroflow_Channel"
+        val channelId = "agroflow_tasks_channel"
+        val brandColor = 0xFF2E7D32.toInt() // Verde AgroFlow
+
+        // Estilo expandible enriquecido
+        val bigTextStyle = NotificationCompat.BigTextStyle()
+            .setBigContentTitle("🌾 $title")
+            .setSummaryText("AgroFlow • Actividades")
+            .bigText(message)
+
         val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Usa el icono de la app en produccion
-            .setContentTitle(title)
+            .setSmallIcon(com.agroflow.R.mipmap.ic_launcher)
+            .setColor(brandColor)
+            .setContentTitle("🌾 $title")
             .setContentText(message)
+            .setStyle(bigTextStyle)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_EVENT)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .addAction(
+                android.R.drawable.ic_menu_view,
+                "Ver en AgroFlow",
+                pendingIntent
+            )
 
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Canal Agroflow",
+                "AgroFlow - Tareas y Alertas",
                 NotificationManager.IMPORTANCE_HIGH
-            )
+            ).apply {
+                description = "Notificaciones de asignación y avances de tareas agrícolas"
+                enableLights(true)
+                lightColor = brandColor
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250, 150, 250)
+                setShowBadge(true)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+            }
             manager.createNotificationChannel(channel)
         }
 
-        manager.notify(Random.nextInt(), builder.build())
+        manager.notify(Random.nextInt(1000, 9999), builder.build())
     }
 }

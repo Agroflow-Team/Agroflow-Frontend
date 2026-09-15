@@ -39,52 +39,74 @@ class EmpleadoViewModel(application: Application) : AndroidViewModel(application
     var currentFincaId by mutableStateOf<String?>(null)
         private set
 
+    var currentFincaNombre by mutableStateOf<String?>(null)
+        private set
+
+    var nombreTrabajador by mutableStateOf<String?>(null)
+        private set
+
     var tarifaHora by mutableStateOf(0.0)
+        private set
+
+    var actualTrabajadorId by mutableStateOf<String?>(null)
         private set
 
     fun loadTasks() {
         val workerId = SessionManager.userId ?: return
         viewModelScope.launch {
-            var actualTrabajadorId = workerId
+            var targetTrabajadorId = workerId
             
-            // 1. Obtener el verdadero ID del trabajador (usando el usuarioId)
+            // 1. Obtener el verdadero perfil del trabajador (usando el usuarioId o id)
             try {
                 val response = com.agroflow.core.RetrofitClient.personnelApi.getTrabajadores()
                 if (response.isSuccessful) {
-                    val trabajador = response.body()?.find { it.usuarioId == workerId || it.id == workerId }
+                    val lista = response.body() ?: emptyList()
+                    val trabajador = lista.find { 
+                        it.usuarioId.equals(workerId, ignoreCase = true) || it.id.equals(workerId, ignoreCase = true) 
+                    }
                     if (trabajador != null) {
+                        targetTrabajadorId = trabajador.id
                         actualTrabajadorId = trabajador.id
                         tarifaHora = trabajador.tarifaHora
+                        nombreTrabajador = trabajador.nombreCompleto
+                        currentFincaId = trabajador.fincaId
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("EmpleadoVM", "Error al consultar trabajadores: ${e.message}")
             }
 
-            // 2. Ahora sí, cargar las tareas usando el ID correcto
-            tasks = taskRepository.getTasksByWorker(actualTrabajadorId)
+            // 2. Obtener el nombre de la finca asignada
+            val fincaIdToSearch = currentFincaId
+            try {
+                val responseFincas = com.agroflow.core.RetrofitClient.personnelApi.getFincas()
+                if (responseFincas.isSuccessful) {
+                    val fincasList = responseFincas.body() ?: emptyList()
+                    if (fincaIdToSearch != null) {
+                        val fincaEncontrada = fincasList.find { it.id.equals(fincaIdToSearch, ignoreCase = true) }
+                        if (fincaEncontrada != null) {
+                            currentFincaNombre = fincaEncontrada.nombre
+                        }
+                    } else if (fincasList.isNotEmpty()) {
+                        currentFincaId = fincasList.first().id
+                        currentFincaNombre = fincasList.first().nombre
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("EmpleadoVM", "Error al consultar fincas: ${e.message}")
+            }
+
+            // 3. Cargar las tareas usando el ID correcto
+            tasks = taskRepository.getTasksByWorker(targetTrabajadorId)
             
             totalHorasTrabajadas = tasks.filter { it.estado == TaskStatus.COMPLETADA }
                 .sumOf { it.horasEfectivas }
             
             salarioEstimado = totalHorasTrabajadas * tarifaHora
             
-            // Obtener fincaId: primero de las tareas, si no hay, del API de fincas
-            var fincaId = tasks.firstOrNull()?.fincaId
-            
-            if (fincaId == null) {
-                try {
-                    val response = com.agroflow.core.RetrofitClient.personnelApi.getFincas()
-                    if (response.isSuccessful) {
-                        fincaId = response.body()?.firstOrNull()?.id
-                    }
-                } catch (_: Exception) {}
-            }
-            
-            currentFincaId = fincaId
-            
-            if (fincaId != null) {
-                loadInventory(fincaId)
+            val finalFincaId = currentFincaId ?: tasks.firstOrNull()?.fincaId
+            if (finalFincaId != null) {
+                loadInventory(finalFincaId)
             }
         }
     }

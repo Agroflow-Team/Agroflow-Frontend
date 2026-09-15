@@ -33,6 +33,11 @@ fun EmpleadoDashboardScreen(
     
     var showNotifications by remember { mutableStateOf(false) }
 
+    // Cargar automáticamente las tareas, la finca y el inventario del trabajador
+    LaunchedEffect(Unit) {
+        viewModel.loadTasks()
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -53,7 +58,15 @@ fun EmpleadoDashboardScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = SessionManager.userEmail ?: "worker@agroflow.com", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = viewModel.nombreTrabajador ?: SessionManager.userEmail ?: "Trabajador",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = SessionManager.userEmail ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
                     Text(
                         text = "Mi Perfil",
                         color = MaterialTheme.colorScheme.primary,
@@ -126,11 +139,9 @@ fun EmpleadoDashboardScreen(
                         Column {
                             Text(title)
                             // Display Finca
-                            if (viewModel.currentFincaId != null) {
-                                Text("Finca Actual: ${viewModel.currentFincaId}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                            } else {
-                                Text("Sin finca asignada", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                            }
+                            val fincaText = viewModel.currentFincaNombre ?: if (viewModel.currentFincaId != null) "Finca Asignada" else "Sin finca asignada"
+                            val fincaColor = if (viewModel.currentFincaId != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                            Text("🏡 $fincaText", style = MaterialTheme.typography.bodySmall, color = fincaColor)
                         }
                     },
                     navigationIcon = {

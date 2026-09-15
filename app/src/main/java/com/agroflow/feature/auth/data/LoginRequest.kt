@@ -5,3 +5,8 @@ data class LoginRequest(
     val clave: String,
     val fcmToken: String? = null
 )
+
+data class UpdateFcmTokenRequest(
+    val usuarioId: String,
+    val fcmToken: String
+)

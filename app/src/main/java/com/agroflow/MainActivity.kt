@@ -27,6 +27,11 @@ class MainActivity : ComponentActivity() {
                 androidx.core.app.ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
             }
         }
+
+        // Sincronizar token de Firebase automáticamente si el usuario ya tiene sesión iniciada
+        if (SessionManager.isLoggedIn()) {
+            com.agroflow.core.fcm.FcmHelper.syncFcmTokenWithBackend()
+        }
         
         enableEdgeToEdge()
         setContent {

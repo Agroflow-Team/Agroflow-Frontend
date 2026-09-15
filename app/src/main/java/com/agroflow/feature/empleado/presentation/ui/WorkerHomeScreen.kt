@@ -47,7 +47,7 @@ fun WorkerHomeScreen(viewModel: EmpleadoViewModel) {
                     Text("Tareas Asignadas", fontSize = 14.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "5", // Example dummy data
+                        text = "${viewModel.tasks.size}",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -68,7 +68,7 @@ fun WorkerHomeScreen(viewModel: EmpleadoViewModel) {
                     Text("Horas Reportadas", fontSize = 14.sp, color = Color.Gray)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "32h", // Example dummy data
+                        text = "${viewModel.totalHorasTrabajadas}h",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary

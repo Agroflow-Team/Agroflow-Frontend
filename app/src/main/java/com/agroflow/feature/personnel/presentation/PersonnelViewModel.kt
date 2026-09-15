@@ -95,19 +95,31 @@ class PersonnelViewModel : ViewModel() {
         viewModelScope.launch {
             uiState = PersonnelUiState.Loading
             try {
-                val response = if (fincaId != null) {
-                    RetrofitClient.personnelApi.getTrabajadoresByFinca(fincaId)
-                } else {
-                    RetrofitClient.personnelApi.getTrabajadores()
+                var loaded: List<Trabajador> = emptyList()
+                if (fincaId != null) {
+                    val response = RetrofitClient.personnelApi.getTrabajadoresByFinca(fincaId)
+                    if (response.isSuccessful) {
+                        loaded = response.body() ?: emptyList()
+                    }
                 }
                 
-                if (response.isSuccessful) {
-                    trabajadores = response.body() ?: emptyList()
-                    uiState = PersonnelUiState.Success
-                } else {
-                    uiState = PersonnelUiState.Error("Error al cargar trabajadores: ${response.code()}")
+                // Si la consulta por finca viene vacía o no se especificó finca, consultar todos
+                if (loaded.isEmpty()) {
+                    val allResponse = RetrofitClient.personnelApi.getTrabajadores()
+                    if (allResponse.isSuccessful) {
+                        val all = allResponse.body() ?: emptyList()
+                        loaded = if (fincaId != null && all.any { it.fincaId.equals(fincaId, ignoreCase = true) }) {
+                            all.filter { it.fincaId.equals(fincaId, ignoreCase = true) }
+                        } else {
+                            all
+                        }
+                    }
                 }
+                
+                trabajadores = loaded
+                uiState = PersonnelUiState.Success
             } catch (e: Exception) {
+                android.util.Log.e("PersonnelVM", "Error cargando trabajadores: ${e.message}")
                 uiState = PersonnelUiState.Error("Error de conexión: ${e.message}")
             }
         }

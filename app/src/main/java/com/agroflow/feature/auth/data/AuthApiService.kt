@@ -7,4 +7,7 @@ import retrofit2.http.POST
 interface AuthApiService {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
+    @POST("api/auth/fcm-token")
+    suspend fun updateFcmToken(@Body request: UpdateFcmTokenRequest): Response<Map<String, String>>
 }
