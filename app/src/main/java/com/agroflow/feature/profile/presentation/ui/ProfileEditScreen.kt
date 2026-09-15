@@ -1,5 +1,7 @@
 package com.agroflow.feature.profile.presentation.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,28 +15,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.agroflow.core.session.SessionManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
+import com.agroflow.core.session.SessionManager
+import com.agroflow.feature.profile.presentation.ProfileViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileEditScreen(
     onLogout: () -> Unit,
-    viewModel: com.agroflow.feature.auth.presentation.AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: ProfileViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var nombre by remember { mutableStateOf(SessionManager.userName ?: SessionManager.userEmail?.substringBefore("@") ?: "Agricultor") }
     var email by remember { mutableStateOf(SessionManager.userEmail ?: "") }
     var telefono by remember { mutableStateOf(SessionManager.userPhone ?: "") }
     var direccion by remember { mutableStateOf(SessionManager.userAddress ?: "") }
     var savedMessage by remember { mutableStateOf<String?>(null) }
+    var isError by remember { mutableStateOf(false) }
     var photoUri by remember { mutableStateOf<android.net.Uri?>(SessionManager.userPhotoUri?.let { android.net.Uri.parse(it) }) }
+    var isSaving by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -61,6 +69,7 @@ fun ProfileEditScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFF1F8E9))
             .verticalScroll(scrollState)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -133,9 +142,9 @@ fun ProfileEditScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Email Field
+        // Email Field (Readonly)
         Text(
-            text = "Correo electrónico",
+            text = "Correo electrónico (Solo lectura)",
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
             color = Color(0xFF1C1C1E),
             modifier = Modifier.fillMaxWidth()
@@ -143,10 +152,13 @@ fun ProfileEditScreen(
         Spacer(modifier = Modifier.height(8.dp))
         TextField(
             value = email,
-            onValueChange = { email = it },
-            placeholder = { Text("tucorreo@email.com") },
+            onValueChange = { },
+            readOnly = true,
             singleLine = true,
-            colors = textFieldColors,
+            colors = textFieldColors.copy(
+                focusedContainerColor = Color(0xFFE5E5EA),
+                unfocusedContainerColor = Color(0xFFE5E5EA)
+            ),
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth()
         )
@@ -235,17 +247,15 @@ fun ProfileEditScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // Success message
+        // Success or Error message
         savedMessage?.let {
             Text(
                 text = it,
-                color = Color(0xFF2C7A4B),
+                color = if (isError) Color(0xFFFF453A) else Color(0xFF30D158),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.padding(bottom = 12.dp)
             )
         }
-
-        var isSaving by remember { mutableStateOf(false) }
 
         // Save Button
         if (isSaving) {
@@ -255,43 +265,53 @@ fun ProfileEditScreen(
                 onClick = {
                     if (SessionManager.userId != null) {
                         isSaving = true
+                        savedMessage = null
                         viewModel.updateUserProfile(
+                            context = context,
                             id = SessionManager.userId!!,
                             nombre = nombre,
                             telefono = telefono,
                             direccion = direccion,
-                            fotoUrl = photoUri?.toString(),
-                            onSuccess = {
+                            imageUri = photoUri,
+                            onSuccess = { finalUrl ->
                                 isSaving = false
                                 SessionManager.userName = nombre
                                 SessionManager.userPhone = telefono
                                 SessionManager.userAddress = direccion
-                                if (photoUri != null) {
-                                    SessionManager.userPhotoUri = photoUri.toString()
+                                if (finalUrl != null) {
+                                    SessionManager.userPhotoUri = finalUrl
+                                    photoUri = android.net.Uri.parse(finalUrl)
                                 }
-                                savedMessage = "✅ Perfil actualizado en la base de datos"
+                                isError = false
+                                savedMessage = "✅ Guardado"
+                                coroutineScope.launch {
+                                    delay(3000)
+                                    savedMessage = null
+                                }
                             },
                             onError = { error ->
                                 isSaving = false
+                                isError = true
                                 savedMessage = error
                             }
                         )
                     } else {
+                        isError = true
                         savedMessage = "Error: ID de usuario no encontrado"
                     }
                 },
-            shape = RoundedCornerShape(25.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B)),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-        ) {
-            Text(
-                text = "Guardar Cambios",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = Color.White
-            )
-        }
+                shape = RoundedCornerShape(25.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+            ) {
+                Text(
+                    text = "Guardar Cambios",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))

@@ -1,9 +1,13 @@
 package com.agroflow.feature.sales.presentation.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +23,7 @@ import com.agroflow.feature.personnel.presentation.PersonnelViewModel
 import java.text.NumberFormat
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SalesScreen(
     personnelViewModel: PersonnelViewModel,
@@ -34,202 +39,227 @@ fun SalesScreen(
 
     var showCreateDialog by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        if (finca == null) {
-            Text(
-                "Selecciona una finca",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            return@Column
-        }
-
-        Text(
-            "Registro de Ventas",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(Modifier.height(16.dp))
-
-        if (financeViewModel.uiState is FinanceUiState.Loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        if (financeViewModel.uiState is FinanceUiState.Error) {
-            Text(
-                text = (financeViewModel.uiState as FinanceUiState.Error).message,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Button(onClick = { financeViewModel.loadBalance(finca.id) }) {
-                Text("Reintentar")
+    Scaffold(
+        floatingActionButton = {
+            if (finca != null) {
+                FloatingActionButton(
+                    onClick = { showCreateDialog = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Registrar Venta")
+                }
             }
-        }
+        },
+        containerColor = Color(0xFFF1F8E9) // Light pastel green background
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
+            if (finca == null) {
+                Text(
+                    "Selecciona una finca",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                return@Column
+            }
 
-        val balance = financeViewModel.balance
-        if (balance != null) {
-            val salesTransactions = balance.transacciones.filter { it.tipoMovimiento == "INGRESO" }
-            val totalSales = salesTransactions.sumOf { it.montoTotal }
+            Text(
+                "Registro de Ventas",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(16.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Total Ventas",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = formatCurrency(totalSales),
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = Color(0xFF30D158) // Apple Green
-                    )
+            if (financeViewModel.uiState is FinanceUiState.Loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            if (financeViewModel.uiState is FinanceUiState.Error) {
+                Text(
+                    text = (financeViewModel.uiState as FinanceUiState.Error).message,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Button(onClick = { financeViewModel.loadBalance(finca.id) }) {
+                    Text("Reintentar")
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            val balance = financeViewModel.balance
+            if (balance != null) {
+                val salesTransactions = balance.transacciones.filter { it.tipoMovimiento == "INGRESO" }
+                val totalSales = salesTransactions.sumOf { it.montoTotal }
 
-            Button(
-                onClick = { showCreateDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                modifier = Modifier.fillMaxWidth(),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp)
-            ) {
-                Text("Registrar Venta", color = MaterialTheme.colorScheme.onPrimary)
-            }
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Total Ventas",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = formatCurrency(totalSales),
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = Color(0xFF30D158) // Apple Green
+                        )
+                    }
+                }
 
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Historial de Ventas",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(24.dp))
+                
+                Text(
+                    "Historial de Ventas",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(Modifier.height(8.dp))
 
-            LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
-                items(salesTransactions.reversed()) { tx ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                    ) {
+                // Table Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFA5D6A7), RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Categoría / Producto", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), color = Color.Black)
+                    Text("Fecha", fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.7f), color = Color.Black)
+                    Text("Monto", fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.8f), color = Color.Black)
+                }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp))
+                ) {
+                    items(salesTransactions.reversed()) { tx ->
                         Row(
-                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
-                                Text(
-                                    text = tx.categoria,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = tx.fechaTransaccion.take(10),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            
+                            Text(
+                                text = tx.categoria,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = tx.fechaTransaccion.take(10),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(0.7f)
+                            )
                             Text(
                                 text = "+ ${formatCurrency(tx.montoTotal)}",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Color(0xFF30D158) // Apple Green
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = Color(0xFF30D158),
+                                modifier = Modifier.weight(0.8f)
                             )
                         }
+                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
                     }
                 }
             }
         }
-    }
 
-    if (showCreateDialog && finca != null) {
-        var productName by remember { mutableStateOf("") }
-        var quantity by remember { mutableStateOf("") }
-        var amount by remember { mutableStateOf("") }
+        if (showCreateDialog && finca != null) {
+            var productName by remember { mutableStateOf("") }
+            var quantity by remember { mutableStateOf("") }
+            var amount by remember { mutableStateOf("") }
 
-        AlertDialog(
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-            containerColor = MaterialTheme.colorScheme.surface,
-            onDismissRequest = { showCreateDialog = false },
-            title = { Text("Nueva Venta", fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    TextField(
-                        value = productName,
-                        onValueChange = { productName = it },
-                        placeholder = { Text("Producto (ej. Aguacate Hass)") },
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
-                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    TextField(
-                        value = quantity,
-                        onValueChange = { quantity = it },
-                        placeholder = { Text("Cantidad (ej. 100 kg)") },
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
-                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    TextField(
-                        value = amount,
-                        onValueChange = { amount = it },
-                        placeholder = { Text("Monto Total") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7),
-                            unfocusedContainerColor = androidx.compose.ui.graphics.Color(0xFFF3EFE7).copy(alpha = 0.5f),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp),
-                    onClick = {
-                        val parsedAmount = amount.toDoubleOrNull() ?: 0.0
-                        val categoria = if (quantity.isNotBlank()) "$productName ($quantity)" else productName
-                        financeViewModel.registrarTransaccion(finca.id, "INGRESO", categoria, parsedAmount) {
-                            showCreateDialog = false
-                        }
+            AlertDialog(
+                shape = RoundedCornerShape(16.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                onDismissRequest = { showCreateDialog = false },
+                title = { Text("Nueva Venta", fontWeight = FontWeight.Bold) },
+                text = {
+                    Column {
+                        TextField(
+                            value = productName,
+                            onValueChange = { productName = it },
+                            placeholder = { Text("Producto (ej. Aguacate Hass)") },
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFF3EFE7),
+                                unfocusedContainerColor = Color(0xFFF3EFE7).copy(alpha = 0.5f),
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        TextField(
+                            value = quantity,
+                            onValueChange = { quantity = it },
+                            placeholder = { Text("Cantidad (ej. 100 kg)") },
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFF3EFE7),
+                                unfocusedContainerColor = Color(0xFFF3EFE7).copy(alpha = 0.5f),
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        TextField(
+                            value = amount,
+                            onValueChange = { amount = it },
+                            placeholder = { Text("Monto Total") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFF3EFE7),
+                                unfocusedContainerColor = Color(0xFFF3EFE7).copy(alpha = 0.5f),
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-                ) {
-                    Text("Guardar Venta")
+                },
+                confirmButton = {
+                    Button(
+                        shape = RoundedCornerShape(25.dp),
+                        onClick = {
+                            val parsedAmount = amount.toDoubleOrNull() ?: 0.0
+                            val categoria = if (quantity.isNotBlank()) "$productName ($quantity)" else productName
+                            financeViewModel.registrarTransaccion(finca.id, "INGRESO", categoria, parsedAmount) {
+                                showCreateDialog = false
+                            }
+                        }
+                    ) {
+                        Text("Guardar Venta")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCreateDialog = false }) {
+                        Text("Cancelar")
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showCreateDialog = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
+            )
+        }
     }
 }
 
