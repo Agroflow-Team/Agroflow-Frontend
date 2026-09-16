@@ -114,12 +114,12 @@ class VitrinaViewModel : ViewModel() {
         }
     }
 
-    fun markAsVendida(id: String, fincaId: String) {
+    fun updateEstado(id: String, estado: String, fincaId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             try {
-                apiService.updateEstadoPublicacion(id, UpdateEstadoRequest("VENDIDA"))
+                apiService.updateEstadoPublicacion(id, UpdateEstadoRequest(estado))
                 loadMisPublicaciones(fincaId)
             } catch (e: Exception) {
                 _error.value = "Error al actualizar estado: ${e.message}"

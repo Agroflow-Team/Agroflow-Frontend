@@ -99,6 +99,15 @@ object RetrofitClient {
             return _userApi!!
         }
 
+    private var _vitrinaApi: com.agroflow.feature.vitrina.data.VitrinaApiService? = null
+    val vitrinaApi: com.agroflow.feature.vitrina.data.VitrinaApiService
+        get() {
+            if (_vitrinaApi == null) {
+                _vitrinaApi = getRetrofit().create(com.agroflow.feature.vitrina.data.VitrinaApiService::class.java)
+            }
+            return _vitrinaApi!!
+        }
+
     // A simple getter for the legacy "api" reference used in ViewModel
     val api: AuthApiService get() = authApi
 }

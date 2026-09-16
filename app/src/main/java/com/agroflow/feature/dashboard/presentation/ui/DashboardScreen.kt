@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,28 +36,16 @@ fun DashboardScreen(onLogout: () -> Unit) {
     
     var showNotifications by remember { mutableStateOf(false) }
 
-    // Finca startup check
-    LaunchedEffect(personnelViewModel.selectedFinca, personnelViewModel.fincas) {
-        if (personnelViewModel.fincas.isNotEmpty() && personnelViewModel.selectedFinca == null) {
-            // Wait, we need to force selection. But if fincas is empty, they must create one.
-            // Let's just route them to Fincas screen if they don't have a finca selected
-            if (selectedTab != 8) {
-                // Ensure they go to Fincas
-                selectedTab = 8
-            }
-        }
-    }
+    // El usuario solicitó que abra directamente el dashboard, así que omitimos el redireccionamiento a Fincas
 
     val menuItems = listOf(
-        "📊 Inicio / Dashboard Principal" to 0,
-        "🌱 Mis Lotes / Cultivos" to 9,
-        "📡 Sensores e IoT" to 10,
+        "📊 Dashboard" to 0,
         "📦 Inventario" to 1,
-        "📈 Finanzas y Reportes" to 6,
-        "👥 Gestión de Empleados" to 2,
-        "✅ Gestión de Tareas" to 3,
+        "👥 Empleados" to 2,
+        "✅ Tareas" to 3,
         "🏷️ Catálogo" to 4,
         "💰 Ventas" to 5,
+        "📈 Finanzas" to 6,
         "🏡 Fincas" to 8
     )
 
@@ -65,7 +54,7 @@ fun DashboardScreen(onLogout: () -> Unit) {
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(280.dp),
-                drawerContainerColor = Color(0xFF2C7A4B)
+                drawerContainerColor = Color(0xFF5A714C)
             ) {
                 Column(
                     modifier = Modifier
@@ -77,30 +66,40 @@ fun DashboardScreen(onLogout: () -> Unit) {
                     Box(
                         modifier = Modifier
                             .size(100.dp)
-                            .background(Color.White.copy(alpha = 0.3f), CircleShape),
+                            .background(Color.White.copy(alpha = 0.3f), CircleShape)
+                            .clip(CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("👤", fontSize = 48.sp)
+                        // TODO: Use real photo URI when Profile logic is complete
+                        Text("🧑‍🌾", fontSize = 48.sp)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = SessionManager.userEmail ?: "Agricultor",
+                        text = SessionManager.userEmail?.substringBefore("@")?.replaceFirstChar { it.uppercase() } ?: "Agricultor",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = SessionManager.userEmail ?: "correo@ejemplo.com",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                     TextButton(
                         onClick = {
                             selectedTab = 7
                             scope.launch { drawerState.close() }
                         },
-                        contentPadding = PaddingValues(0.dp)
+                        contentPadding = PaddingValues(0.dp),
+                        modifier = Modifier.height(24.dp)
                     ) {
-                        Text("Mi Perfil", color = Color.White.copy(alpha = 0.8f))
+                        Text("Ver Perfil", color = Color(0xFFF4E245), fontSize = 14.sp)
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-                    Divider(color = Color.White.copy(alpha = 0.3f))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Menu items
@@ -113,9 +112,9 @@ fun DashboardScreen(onLogout: () -> Unit) {
                                 scope.launch { drawerState.close() }
                             },
                             colors = NavigationDrawerItemDefaults.colors(
-                                selectedContainerColor = Color.White.copy(alpha = 0.15f),
+                                selectedContainerColor = Color(0xFFF4E245).copy(alpha = 0.15f),
                                 unselectedContainerColor = Color.Transparent,
-                                selectedTextColor = Color.White,
+                                selectedTextColor = Color(0xFFF4E245),
                                 unselectedTextColor = Color.White.copy(alpha = 0.8f)
                             )
                         )
@@ -148,45 +147,62 @@ fun DashboardScreen(onLogout: () -> Unit) {
         }
 
         Scaffold(
+            containerColor = Color(0xFF5A714C),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = {
                         val title = menuItems.find { it.second == selectedTab }?.first ?: if(selectedTab == 7) "Mi Perfil" else "AgroFlow"
-                        Text(title)
+                        Text(title, color = Color.White)
                     },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
                         }
                     },
                     actions = {
                         Box {
                             IconButton(onClick = { showNotifications = true }) {
-                                Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
+                                Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White)
                             }
                             DropdownMenu(
                                 expanded = showNotifications,
                                 onDismissRequest = { showNotifications = false },
-                                modifier = Modifier.width(300.dp).background(MaterialTheme.colorScheme.surface)
+                                modifier = Modifier
+                                    .width(320.dp)
+                                    .background(Color(0xFF5A714C))
+                                    .padding(8.dp)
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text("Se regó el cultivo de tomate", fontWeight = FontWeight.Bold) },
-                                    onClick = { showNotifications = false }
+                                Text("Notificaciones", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp, start = 4.dp))
+                                
+                                val notifications = listOf(
+                                    "Se regó el cultivo de tomate" to false,
+                                    "Nueva tarea completada: Revisar cercas" to false,
+                                    "Insumo Urea bajo en stock" to true
                                 )
-                                Divider()
-                                DropdownMenuItem(
-                                    text = { Text("Nueva tarea completada: Revisar cercas", fontWeight = FontWeight.Bold) },
-                                    onClick = { showNotifications = false }
-                                )
-                                Divider()
-                                DropdownMenuItem(
-                                    text = { Text("Insumo Urea bajo en stock", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) },
-                                    onClick = { showNotifications = false }
-                                )
+                                
+                                notifications.forEach { (text, isAlert) ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFF6A8256)),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Notifications,
+                                                contentDescription = null,
+                                                tint = if(isAlert) Color(0xFFFF453A) else Color(0xFFF4E245),
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(text, color = Color.White, fontSize = 14.sp)
+                                        }
+                                    }
+                                }
                             }
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF5A714C))
                 )
             }
         ) { paddingValues ->
@@ -211,19 +227,7 @@ fun DashboardScreen(onLogout: () -> Unit) {
             }
         }
         
-        // Startup Finca Dialog
-        if (personnelViewModel.selectedFinca == null && selectedTab != 8) {
-            AlertDialog(
-                onDismissRequest = {}, // Force selection
-                confirmButton = {
-                    Button(onClick = { selectedTab = 8 }) {
-                        Text("Ir a Fincas")
-                    }
-                },
-                title = { Text("¡Bienvenido a AgroFlow!") },
-                text = { Text("Para empezar a usar el sistema, debes crear o seleccionar una finca activa.") }
-            )
-        }
+        // Dialog removed as per user request (open Dashboard directly)
     }
 }
 

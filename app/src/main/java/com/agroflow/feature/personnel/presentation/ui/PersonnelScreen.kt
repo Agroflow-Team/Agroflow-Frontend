@@ -1,21 +1,25 @@
 package com.agroflow.feature.personnel.presentation.ui
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.agroflow.feature.personnel.presentation.PersonnelViewModel
 import com.agroflow.feature.personnel.presentation.PersonnelUiState
@@ -39,25 +43,25 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
             if (viewModel.selectedFinca != null) {
                 FloatingActionButton(
                     onClick = { showCreateDialog = true },
-                    containerColor = Color(0xFF2C7A4B),
+                    containerColor = Color(0xFF388E3C),
                     contentColor = Color.White
                 ) {
-                    Text("+", style = MaterialTheme.typography.headlineMedium)
+                    Icon(Icons.Default.Add, contentDescription = "Añadir Trabajador")
                 }
             }
         },
-        containerColor = Color(0xFFF3EFE7)
+        containerColor = Color(0xFFE8F5E9)
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
             Text(
                 text = "Fincas y Trabajadores", 
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
+                color = Color(0xFF2E7D32)
             )
             Spacer(Modifier.height(20.dp))
             
             if (viewModel.uiState is PersonnelUiState.Loading) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                CircularProgressIndicator(color = Color(0xFF388E3C))
                 Spacer(Modifier.height(16.dp))
             }
             
@@ -70,13 +74,17 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
             }
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Selecciona una Finca", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    "Selecciona una Finca", 
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), 
+                    color = Color(0xFF388E3C)
+                )
                 Button(
                     onClick = { showCreateFincaDialog = true },
                     shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C))
                 ) {
-                    Text("+ Finca", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+                    Text("+ Finca", color = Color.White, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -97,15 +105,17 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                 onExpandedChange = { expanded = !expanded },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
             ) {
-                TextField(
+                OutlinedTextField(
                     value = viewModel.selectedFinca?.nombre ?: "Selecciona Finca",
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
-                    colors = ExposedDropdownMenuDefaults.textFieldColors(
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = Color(0xFF388E3C),
+                        unfocusedBorderColor = Color(0xFF81C784)
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -116,7 +126,7 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                 ) {
                     viewModel.fincas.forEach { finca ->
                         DropdownMenuItem(
-                            text = { Text(finca.nombre) },
+                            text = { Text(finca.nombre, color = Color(0xFF2E7D32)) },
                             onClick = {
                                 viewModel.selectedFinca = finca
                                 viewModel.selectedTrabajador = null
@@ -134,15 +144,15 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                     Text(
                         text = "Trabajadores", 
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF388E3C)
                     )
                 }
                 Spacer(Modifier.height(8.dp))
                 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.weight(1f)
                 ) {
                     items(viewModel.trabajadores) { trabajador ->
@@ -150,21 +160,25 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { viewModel.selectedTrabajador = trabajador },
+                                .clickable {
+                                    viewModel.selectedTrabajador = trabajador
+                                    trabajadorToEdit = trabajador
+                                    showEditDialog = true
+                                },
                             shape = RoundedCornerShape(16.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
+                            border = BorderStroke(1.dp, if (isSelected) Color(0xFF388E3C) else Color(0xFF81C784))
                         ) {
                             Column(
-                                modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 // Avatar
                                 Surface(
                                     modifier = Modifier.size(60.dp),
                                     shape = CircleShape,
-                                    color = Color(0xFF2C7A4B).copy(alpha=0.15f)
+                                    color = Color(0xFFE8F5E9)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Text("👤", style = MaterialTheme.typography.headlineMedium)
@@ -174,15 +188,15 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                                 Text(
                                     text = trabajador.nombreCompleto.split(" ").firstOrNull() ?: trabajador.nombreCompleto, 
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = Color(0xFF2E7D32),
                                     maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     text = trabajador.documento, 
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = Color(0xFF4CAF50)
                                 )
                                 Spacer(Modifier.height(12.dp))
                                 Row(
@@ -193,13 +207,13 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                                         onClick = { trabajadorToEdit = trabajador; showEditDialog = true },
                                         modifier = Modifier.size(36.dp)
                                     ) {
-                                        Text("✏️")
+                                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color(0xFF388E3C))
                                     }
                                     IconButton(
                                         onClick = { trabajadorToDelete = trabajador; showDeleteDialog = true },
                                         modifier = Modifier.size(36.dp)
                                     ) {
-                                        Text("🗑️")
+                                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFFF453A))
                                     }
                                 }
                             }
@@ -210,16 +224,11 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
         }
     }
 
-    val textFieldColors = TextFieldDefaults.colors(
-        focusedContainerColor = Color(0xFFF3EFE7),
-        unfocusedContainerColor = Color(0xFFF3EFE7).copy(alpha = 0.7f),
-        focusedIndicatorColor = Color.Transparent,
-        unfocusedIndicatorColor = Color.Transparent,
-        cursorColor = Color(0xFF2C7A4B),
-        focusedTextColor = Color(0xFF1C1C1E),
-        unfocusedTextColor = Color(0xFF1C1C1E),
-        focusedPlaceholderColor = Color(0xFF8E8E93),
-        unfocusedPlaceholderColor = Color(0xFF8E8E93)
+    val outlinedTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = Color(0xFF388E3C),
+        unfocusedBorderColor = Color(0xFF81C784),
+        focusedLabelColor = Color(0xFF388E3C),
+        cursorColor = Color(0xFF388E3C)
     )
 
     if (showCreateFincaDialog) {
@@ -229,15 +238,15 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
             shape = RoundedCornerShape(24.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showCreateFincaDialog = false },
-            title = { Text("Registrar Nueva Finca", color = Color(0xFF1C1C1E), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+            title = { Text("Registrar Nueva Finca", color = Color(0xFF2E7D32), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
             text = {
                 Column {
-                    TextField(
+                    OutlinedTextField(
                         value = nombreFinca, 
                         onValueChange = { nombreFinca = it }, 
-                        placeholder = { Text("Nombre de la finca (ej. Villa Verde)") }, 
+                        label = { Text("Nombre de la finca (ej. Villa Verde)") }, 
                         singleLine = true, 
-                        colors = textFieldColors, 
+                        colors = outlinedTextFieldColors, 
                         shape = RoundedCornerShape(14.dp), 
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -251,11 +260,11 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                             showCreateFincaDialog = false
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C))
                 ) { Text("Registrar", color = Color.White) }
             },
             dismissButton = {
-                TextButton(onClick = { showCreateFincaDialog = false }) { Text("Cancelar", color = Color(0xFF8E8E93)) }
+                TextButton(onClick = { showCreateFincaDialog = false }) { Text("Cancelar", color = Color(0xFF388E3C)) }
             }
         )
     }
@@ -271,18 +280,18 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
             shape = RoundedCornerShape(24.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showCreateDialog = false },
-            title = { Text("Nuevo Trabajador", color = Color(0xFF1C1C1E), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+            title = { Text("Nuevo Trabajador", color = Color(0xFF2E7D32), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
             text = {
                 Column {
-                    TextField(value = nombre, onValueChange = { nombre = it }, placeholder = { Text("Nombre Completo") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre Completo") }, singleLine = true, colors = outlinedTextFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = documento, onValueChange = { documento = it }, placeholder = { Text("Documento") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = documento, onValueChange = { documento = it }, label = { Text("Documento") }, singleLine = true, colors = outlinedTextFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = correo, onValueChange = { correo = it }, placeholder = { Text("Correo") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = correo, onValueChange = { correo = it }, label = { Text("Correo") }, singleLine = true, colors = outlinedTextFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = clave, onValueChange = { clave = it }, placeholder = { Text("Contraseña") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = clave, onValueChange = { clave = it }, label = { Text("Contraseña") }, singleLine = true, colors = outlinedTextFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = tarifaHora, onValueChange = { tarifaHora = it }, placeholder = { Text("Tarifa / Hora (ej. 10000)") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = tarifaHora, onValueChange = { tarifaHora = it }, label = { Text("Tarifa / Hora (ej. 10000)") }, singleLine = true, colors = outlinedTextFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                 }
             },
             confirmButton = {
@@ -293,11 +302,11 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                             showCreateDialog = false
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C))
                 ) { Text("Crear", color = Color.White) }
             },
             dismissButton = {
-                TextButton(onClick = { showCreateDialog = false }) { Text("Cancelar", color = Color(0xFF8E8E93)) }
+                TextButton(onClick = { showCreateDialog = false }) { Text("Cancelar", color = Color(0xFF388E3C)) }
             }
         )
     }
@@ -311,14 +320,14 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
             shape = RoundedCornerShape(24.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Editar Trabajador", color = Color(0xFF1C1C1E), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+            title = { Text("Editar Trabajador", color = Color(0xFF2E7D32), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
             text = {
                 Column {
-                    TextField(value = nombre, onValueChange = { nombre = it }, placeholder = { Text("Nombre Completo") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre Completo") }, singleLine = true, colors = outlinedTextFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = documento, onValueChange = { documento = it }, placeholder = { Text("Documento") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = documento, onValueChange = { documento = it }, label = { Text("Documento") }, singleLine = true, colors = outlinedTextFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    TextField(value = tarifaHora, onValueChange = { tarifaHora = it }, placeholder = { Text("Tarifa / Hora") }, singleLine = true, colors = textFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = tarifaHora, onValueChange = { tarifaHora = it }, label = { Text("Tarifa / Hora") }, singleLine = true, colors = outlinedTextFieldColors, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth())
                 }
             },
             confirmButton = {
@@ -327,11 +336,11 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                         viewModel.updateTrabajador(trabajadorToEdit!!.id, nombre, documento, tarifaHora.toDoubleOrNull() ?: 0.0)
                         showEditDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C))
                 ) { Text("Guardar", color = Color.White) }
             },
             dismissButton = {
-                TextButton(onClick = { showEditDialog = false }) { Text("Cancelar", color = Color(0xFF8E8E93)) }
+                TextButton(onClick = { showEditDialog = false }) { Text("Cancelar", color = Color(0xFF388E3C)) }
             }
         )
     }
@@ -341,8 +350,8 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
             shape = RoundedCornerShape(24.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar Trabajador", color = Color(0xFF1C1C1E), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
-            text = { Text("¿Eliminar a ${trabajadorToDelete!!.nombreCompleto}?", color = Color(0xFF1C1C1E)) },
+            title = { Text("Eliminar Trabajador", color = Color(0xFF2E7D32), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+            text = { Text("¿Eliminar a ${trabajadorToDelete!!.nombreCompleto}?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -353,7 +362,7 @@ fun PersonnelScreen(viewModel: PersonnelViewModel) {
                 ) { Text("Eliminar", color = Color.White) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar", color = Color(0xFF8E8E93)) }
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar", color = Color(0xFF388E3C)) }
             }
         )
     }

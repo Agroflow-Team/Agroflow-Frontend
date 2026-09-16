@@ -1,9 +1,12 @@
 package com.agroflow.feature.vitrina.presentation.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -11,16 +14,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.agroflow.core.session.SessionManager
-import com.agroflow.core.theme.AppleDarkGrey
-import com.agroflow.core.theme.AppleGreen
+import coil.compose.AsyncImage
 import com.agroflow.feature.vitrina.data.CreatePublicacionRequest
 import com.agroflow.feature.vitrina.data.Publicacion
 import com.agroflow.feature.vitrina.presentation.VitrinaViewModel
+
+private val AgroFlowGreen = Color(0xFF2C7A4B)
+private val AgroFlowBackground = Color(0xFFF3EFE7)
+private val AgroFlowSurface = Color(0xFFFFFFFF)
+private val AppleDarkGrey = Color(0xFF1C1C1E)
+private val AppleTextSecondary = Color(0xFF8E8E93)
+private val AppleRed = Color(0xFFFF453A)
+private val AppleBlue = Color(0xFF0A84FF)
+private val AppleGreen = Color(0xFF30D158)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,12 +62,13 @@ fun MisPublicacionesScreen(
             if (fincaId != null) {
                 FloatingActionButton(
                     onClick = { showCreateDialog = true },
-                    containerColor = AppleGreen
+                    containerColor = AgroFlowGreen
                 ) {
                     Text("+", color = Color.White, style = MaterialTheme.typography.headlineMedium)
                 }
             }
-        }
+        },
+        containerColor = AgroFlowBackground
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (fincaId == null) {
@@ -63,20 +76,21 @@ fun MisPublicacionesScreen(
                     text = "Selecciona una finca en la pestaña Fincas para ver tus publicaciones.",
                     modifier = Modifier.align(Alignment.Center).padding(24.dp),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = AppleDarkGrey.copy(alpha = 0.7f)
                 )
             } else if (isLoading && publicaciones.isEmpty()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = AgroFlowGreen)
             } else if (!error.isNullOrEmpty()) {
                 Text(
                     text = error ?: "",
-                    color = MaterialTheme.colorScheme.error,
+                    color = AppleRed,
                     modifier = Modifier.align(Alignment.Center).padding(16.dp)
                 )
             } else if (publicaciones.isEmpty()) {
                 Text(
                     text = "No tienes publicaciones en ${selectedFinca?.nombre ?: "esta finca"}",
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
+                    color = AppleDarkGrey
                 )
             } else {
                 LazyColumn(
@@ -87,8 +101,9 @@ fun MisPublicacionesScreen(
                     items(publicaciones) { pub ->
                         MiPublicacionItem(
                             pub = pub,
-                            onMarkSold = {
-                                viewModel.markAsVendida(pub.id, fincaId)
+                            onToggleState = { isActiva ->
+                                val newState = if (isActiva) "ACTIVA" else "VENDIDA"
+                                viewModel.updateEstado(pub.id, newState, fincaId)
                             },
                             onEdit = {
                                 publicacionToEdit = pub
@@ -103,7 +118,7 @@ fun MisPublicacionesScreen(
         }
     }
 
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     if (showCreateDialog && fincaId != null) {
         CreatePublicacionDialog(
             fincaId = fincaId,
@@ -140,109 +155,154 @@ fun MisPublicacionesScreen(
                         publicacionToDelete = null
                     }
                 }) {
-                    Text("Eliminar", color = Color.Red)
+                    Text("Eliminar", color = AppleRed)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { publicacionToDelete = null }) {
-                    Text("Cancelar")
+                    Text("Cancelar", color = AppleDarkGrey)
                 }
-            }
+            },
+            containerColor = AgroFlowSurface
         )
     }
 }
 
 @Composable
-fun MiPublicacionItem(pub: Publicacion, onMarkSold: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun MiPublicacionItem(pub: Publicacion, onToggleState: (Boolean) -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+    val context = LocalContext.current
+    
+    val phoneRegex = Regex("""(?:📞\s*Tel:?|Contacto:?)\s*([0-9+\s-]+)""")
+    val locationRegex = Regex("""(?:📍\s*Ubicación:?)\s*([^\n\r]+)""")
+    
+    val fullDesc = pub.descripcion ?: ""
+    val phoneMatch = phoneRegex.find(fullDesc)
+    val phone = phoneMatch?.groupValues?.get(1)?.trim()
+    
+    val locationMatch = locationRegex.find(fullDesc)
+    val location = locationMatch?.groupValues?.get(1)?.trim() ?: "Finca"
+    
+    val cleanDesc = fullDesc.replace(phoneRegex, "").replace(locationRegex, "").trim()
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = AppleDarkGrey)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = AgroFlowSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             if (!pub.imagenUrl.isNullOrBlank()) {
-                coil.compose.AsyncImage(
+                AsyncImage(
                     model = pub.imagenUrl,
                     contentDescription = "Imagen del producto",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Crop
                 )
             } else {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(130.dp)
-                        .background(Color(0xFF2C2C2E), shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                        .background(AgroFlowBackground, shape = RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("🌾", style = MaterialTheme.typography.headlineSmall)
+                    Text("🌾", style = MaterialTheme.typography.headlineLarge)
                 }
             }
             
-            Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Spacer(modifier = Modifier.width(4.dp))
-                
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = pub.tituloProducto,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = AppleDarkGrey
                     )
                     Text(
                         text = "\$${pub.precio}",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                        color = AppleGreen
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = AgroFlowGreen
                     )
                     Text(
                         text = "Disponibles: ${pub.cantidadDisponible}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.LightGray
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AppleTextSecondary
                     )
-                    Text(
-                        text = "Estado: ${pub.estadoPublicacion}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (pub.estadoPublicacion == "ACTIVA") AppleGreen else Color.Red
-                    )
-                }
-                
-                if (pub.estadoPublicacion == "ACTIVA") {
-                    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Button(
-                            onClick = onMarkSold,
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3C))
-                        ) {
-                            Text("Vender", color = Color.White)
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
-                                Text("✏️")
-                            }
-                            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                                Text("🗑️")
-                            }
-                        }
-                    }
-                } else {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                            Text("🗑️")
-                        }
+                    if (phone != null) {
+                        Text(
+                            text = "📞 $phone",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AppleDarkGrey
+                        )
                     }
                 }
             }
 
-            if (!pub.descripcion.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(10.dp))
+            if (cleanDesc.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = pub.descripcion,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.8f)
+                    text = cleanDesc,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppleDarkGrey.copy(alpha = 0.8f)
                 )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = if (pub.estadoPublicacion == "ACTIVA") "ACTIVA" else "VENDIDO",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (pub.estadoPublicacion == "ACTIVA") AgroFlowGreen else AppleTextSecondary
+                    )
+                    Switch(
+                        checked = pub.estadoPublicacion == "ACTIVA",
+                        onCheckedChange = { onToggleState(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = AgroFlowGreen,
+                            checkedTrackColor = AgroFlowGreen.copy(alpha = 0.3f)
+                        )
+                    )
+                }
+                
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconButton(onClick = onEdit, modifier = Modifier.background(AgroFlowBackground, RoundedCornerShape(8.dp)).size(40.dp)) {
+                        Text("✏️")
+                    }
+                    IconButton(onClick = onDelete, modifier = Modifier.background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp)).size(40.dp)) {
+                        Text("🗑️")
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Button(
+                onClick = {
+                    val uri = Uri.parse("geo:0,0?q=${Uri.encode(location)}")
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    intent.setPackage("com.google.android.apps.maps")
+                    if (intent.resolveActivity(context.packageManager) != null) {
+                        context.startActivity(intent)
+                    } else {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = AppleBlue),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("📍 Ver Ubicación", color = Color.White)
             }
         }
     }
@@ -263,11 +323,23 @@ fun CreatePublicacionDialog(
     var ubicacion by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = AppleDarkGrey,
+        unfocusedTextColor = AppleDarkGrey,
+        focusedContainerColor = AgroFlowSurface,
+        unfocusedContainerColor = AgroFlowSurface,
+        focusedBorderColor = AgroFlowGreen,
+        unfocusedBorderColor = AppleTextSecondary,
+        cursorColor = AgroFlowGreen,
+        focusedLabelColor = AgroFlowGreen,
+        unfocusedLabelColor = AppleTextSecondary
+    )
+
     AlertDialog(
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-        containerColor = AppleDarkGrey,
+        shape = RoundedCornerShape(24.dp),
+        containerColor = AgroFlowBackground,
         onDismissRequest = onDismiss,
-        title = { Text("Nueva Publicación", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+        title = { Text("Nueva Publicación", color = AppleDarkGrey, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -276,48 +348,59 @@ fun CreatePublicacionDialog(
                 OutlinedTextField(
                     value = titulo,
                     onValueChange = { titulo = it },
-                    label = { Text("Título del producto (ej. Tomates frescos)") },
+                    label = { Text("Título del producto") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    shape = RoundedCornerShape(14.dp)
                 )
                 OutlinedTextField(
                     value = desc,
                     onValueChange = { desc = it },
-                    label = { Text("Descripción del producto") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Descripción") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    shape = RoundedCornerShape(14.dp)
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = precio,
                         onValueChange = { precio = it },
-                        label = { Text("Precio ($)") },
+                        label = { Text("Precio (\$)", maxLines = 1) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        colors = textFieldColors,
+                        shape = RoundedCornerShape(14.dp)
                     )
                     OutlinedTextField(
                         value = cantidad,
                         onValueChange = { cantidad = it },
-                        label = { Text("Cantidad") },
+                        label = { Text("Cantidad", maxLines = 1) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        colors = textFieldColors,
+                        shape = RoundedCornerShape(14.dp)
                     )
                 }
                 OutlinedTextField(
                     value = telefono,
                     onValueChange = { telefono = it },
-                    label = { Text("Teléfono / WhatsApp (ej. 3001234567)") },
+                    label = { Text("Teléfono / WhatsApp") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    shape = RoundedCornerShape(14.dp)
                 )
                 OutlinedTextField(
                     value = ubicacion,
                     onValueChange = { ubicacion = it },
-                    label = { Text("Ubicación en Google Maps (ej. Vereda Roble o 4.71,-74.07)") },
+                    label = { Text("Ubicación en Google Maps") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    shape = RoundedCornerShape(14.dp)
                 )
-                val context = androidx.compose.ui.platform.LocalContext.current
                 val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
                     contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
                 ) { uri: android.net.Uri? ->
@@ -327,17 +410,14 @@ fun CreatePublicacionDialog(
                 Button(
                     onClick = { launcher.launch("image/*") },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    colors = ButtonDefaults.buttonColors(containerColor = AgroFlowGreen),
+                    shape = RoundedCornerShape(20.dp)
                 ) {
-                    Text(if (imageUri != null) "Imagen seleccionada ✅" else "📸 Seleccionar Foto de Galería")
+                    Text(if (imageUri != null) "Imagen seleccionada ✅" else "📸 Seleccionar Foto")
                 }
-
-                // Keep this hidden or pass it back via onCreate
-                // We'll modify the callback to pass the URI
             }
         },
         confirmButton = {
-            val context = androidx.compose.ui.platform.LocalContext.current
             Button(
                 onClick = {
                     val p = precio.toDoubleOrNull() ?: 0.0
@@ -353,10 +433,6 @@ fun CreatePublicacionDialog(
                             }
                         }
 
-                        // We pass the CreatePublicacionRequest along with the imageUri
-                        // Since onCreate signature only takes Request, I'll invoke ViewModel directly or change signature.
-                        // I will change onCreate signature in the replacement.
-
                         onCreate(
                             CreatePublicacionRequest(
                                 fincaId = fincaId,
@@ -370,15 +446,15 @@ fun CreatePublicacionDialog(
                         )
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = AppleGreen),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = AgroFlowGreen),
+                shape = RoundedCornerShape(25.dp)
             ) {
                 Text("Publicar", color = Color.White, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = Color.LightGray)
+                Text("Cancelar", color = AppleTextSecondary)
             }
         }
     )
@@ -392,7 +468,7 @@ fun EditPublicacionDialog(
     onDismiss: () -> Unit,
     onEdit: (CreatePublicacionRequest) -> Unit
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     
     val fullDesc = publicacion.descripcion.orEmpty()
     val phoneRegex = Regex("""(?:📞\s*Tel:?|Contacto:?)\s*([0-9+\s-]+)""")
@@ -417,6 +493,18 @@ fun EditPublicacionDialog(
     var ubicacion by remember { mutableStateOf(initialLocation) }
     var selectedImagePath by remember { mutableStateOf<String?>(publicacion.imagenUrl) }
 
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = AppleDarkGrey,
+        unfocusedTextColor = AppleDarkGrey,
+        focusedContainerColor = AgroFlowSurface,
+        unfocusedContainerColor = AgroFlowSurface,
+        focusedBorderColor = AgroFlowGreen,
+        unfocusedBorderColor = AppleTextSecondary,
+        cursorColor = AgroFlowGreen,
+        focusedLabelColor = AgroFlowGreen,
+        unfocusedLabelColor = AppleTextSecondary
+    )
+
     val imagePickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
     ) { uri: android.net.Uri? ->
@@ -439,10 +527,10 @@ fun EditPublicacionDialog(
     }
 
     AlertDialog(
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-        containerColor = AppleDarkGrey,
+        shape = RoundedCornerShape(24.dp),
+        containerColor = AgroFlowBackground,
         onDismissRequest = onDismiss,
-        title = { Text("Editar Publicación", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+        title = { Text("Editar Publicación", color = AppleDarkGrey, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -453,13 +541,17 @@ fun EditPublicacionDialog(
                     onValueChange = { titulo = it },
                     label = { Text("Título del producto") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    shape = RoundedCornerShape(14.dp)
                 )
                 OutlinedTextField(
                     value = desc,
                     onValueChange = { desc = it },
-                    label = { Text("Descripción del producto") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Descripción") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    shape = RoundedCornerShape(14.dp)
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
@@ -467,14 +559,18 @@ fun EditPublicacionDialog(
                         onValueChange = { precio = it },
                         label = { Text("Precio (\$)", maxLines = 1) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        colors = textFieldColors,
+                        shape = RoundedCornerShape(14.dp)
                     )
                     OutlinedTextField(
                         value = cantidad,
                         onValueChange = { cantidad = it },
                         label = { Text("Cantidad", maxLines = 1) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        colors = textFieldColors,
+                        shape = RoundedCornerShape(14.dp)
                     )
                 }
                 OutlinedTextField(
@@ -483,14 +579,18 @@ fun EditPublicacionDialog(
                     label = { Text("Teléfono / WhatsApp") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    shape = RoundedCornerShape(14.dp)
                 )
                 OutlinedTextField(
                     value = ubicacion,
                     onValueChange = { ubicacion = it },
-                    label = { Text("Dirección o link de Google Maps") },
+                    label = { Text("Ubicación") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    shape = RoundedCornerShape(14.dp)
                 )
 
                 Row(
@@ -500,13 +600,13 @@ fun EditPublicacionDialog(
                 ) {
                     Button(
                         onClick = { imagePickerLauncher.launch("image/*") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3C)),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = AgroFlowGreen),
+                        shape = RoundedCornerShape(20.dp)
                     ) {
                         Text("📷 Cambiar Foto", color = Color.White)
                     }
                     if (selectedImagePath != null) {
-                        Text("✅ Foto", color = AppleGreen, style = MaterialTheme.typography.bodySmall)
+                        Text("✅", color = AppleGreen, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
@@ -539,15 +639,15 @@ fun EditPublicacionDialog(
                         )
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = AppleGreen),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = AgroFlowGreen),
+                shape = RoundedCornerShape(25.dp)
             ) {
                 Text("Guardar", color = Color.White, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = Color.LightGray)
+                Text("Cancelar", color = AppleTextSecondary)
             }
         }
     )
