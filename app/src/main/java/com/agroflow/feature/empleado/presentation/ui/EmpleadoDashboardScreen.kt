@@ -176,7 +176,10 @@ fun EmpleadoDashboardScreen(
         ) { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
                 when (selectedTab) {
-                    0 -> WorkerHomeScreen(viewModel)
+                    0 -> WorkerHomeScreen(viewModel, onNavigateToTasks = { 
+                        selectedTab = 1
+                        scope.launch { drawerState.close() }
+                    })
                     1 -> WorkerTasksScreen(viewModel)
                     2 -> WorkerInventoryScreen(viewModel)
                     3 -> WorkerInfoScreen(viewModel)

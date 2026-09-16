@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.agroflow.core.session.SessionManager
 import com.agroflow.feature.personnel.data.Trabajador
 import com.agroflow.feature.personnel.presentation.PersonnelViewModel
 import com.agroflow.feature.tasks.data.CreateTaskRequest
@@ -40,6 +41,7 @@ import com.agroflow.feature.tasks.data.TaskStatus
 import com.agroflow.feature.tasks.data.UpdateProgressRequest
 import com.agroflow.feature.tasks.presentation.TaskUiState
 import com.agroflow.feature.tasks.presentation.TaskViewModel
+import kotlin.random.Random
 
 @Composable
 fun StatusBadge(status: TaskStatus) {
@@ -91,6 +93,7 @@ fun SeverityBadge(severity: String) {
 @Composable
 fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewModel = viewModel()) {
     val finca = personnelViewModel.selectedFinca ?: personnelViewModel.fincas.firstOrNull()
+    val isTrabajador = SessionManager.roleId?.equals(SessionManager.ROLE_TRABAJADOR, ignoreCase = true) == true
 
     // Auto-seleccionar finca si aún no está seleccionada pero existen en la lista
     LaunchedEffect(personnelViewModel.fincas) {
@@ -121,8 +124,10 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(12.dp))
-                    Button(onClick = { personnelViewModel.loadFincas() }) {
-                        Text("Cargar Fincas")
+                    if (!isTrabajador) {
+                        Button(onClick = { personnelViewModel.loadFincas() }) {
+                            Text("Cargar Fincas")
+                        }
                     }
                 }
             }
@@ -146,17 +151,19 @@ fun TasksScreen(personnelViewModel: PersonnelViewModel, taskViewModel: TaskViewM
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            Button(
-                onClick = { 
-                    personnelViewModel.loadTrabajadores(finca.id)
-                    showCreateDialog = true 
-                },
-                shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Nueva Tarea", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+            if (!isTrabajador) {
+                Button(
+                    onClick = { 
+                        personnelViewModel.loadTrabajadores(finca.id)
+                        showCreateDialog = true 
+                    },
+                    shape = RoundedCornerShape(20.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Nueva Tarea", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+                }
             }
         }
 
@@ -386,7 +393,7 @@ fun InteractiveTaskColumn(
         modifier = Modifier
             .width(290.dp)
             .fillMaxHeight()
-            .background(Color(0xFFF7F5F0), RoundedCornerShape(16.dp))
+            .background(Color(0xFFE8F5E9), RoundedCornerShape(16.dp))
             .padding(10.dp)
     ) {
         // Encabezado de Columna
@@ -510,17 +517,14 @@ fun DraggableKanbanCard(
                     // Limitar rango de arrastre
                     offsetX = newOffset.coerceIn(-180f, 180f)
                 }
-            }
-            .shadow(
-                elevation = if (isDragging) 8.dp else 2.dp,
-                shape = RoundedCornerShape(14.dp)
-            ),
-        shape = RoundedCornerShape(14.dp),
+            },
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDragging) 8.dp else 4.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = when {
                 offsetX > dragThreshold -> Color(0xFFE8F5E9)
                 offsetX < -dragThreshold -> Color(0xFFFFF3E0)
-                else -> MaterialTheme.colorScheme.surface
+                else -> Color.White
             }
         )
     ) {
@@ -546,14 +550,14 @@ fun DraggableKanbanCard(
             Text(
                 text = task.titulo,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
+                color = Color(0xFF1C1C1E)
             )
             if (!task.descripcion.isNullOrBlank()) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = task.descripcion,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color(0xFF1C1C1E).copy(alpha = 0.8f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -582,6 +586,19 @@ fun DraggableKanbanCard(
                 }
             }
 
+            // Mostrar el tiempo si está completada
+            if (currentStatus == TaskStatus.COMPLETADA) {
+                Spacer(Modifier.height(8.dp))
+                val hours = task.horasEfectivas.toInt()
+                val minutes = ((task.horasEfectivas - hours) * 60).toInt()
+                Text(
+                    text = "Demoró: ${hours}h ${minutes}m",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFF2C7A4B),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
             Spacer(Modifier.height(8.dp))
@@ -595,8 +612,8 @@ fun DraggableKanbanCard(
                 if (targetStatusLeft != null) {
                     AssistChip(
                         onClick = { onMoveStatus(targetStatusLeft) },
-                        label = { Text("◀ ${if (targetStatusLeft == TaskStatus.PENDIENTE) "Pendiente" else "En Proceso"}", fontSize = 11.sp) },
-                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFF0F0F0))
+                        label = { Text("◀ ${if (targetStatusLeft == TaskStatus.PENDIENTE) "Pendiente" else "En Proceso"}", fontSize = 11.sp, color = Color(0xFF1B5E20)) },
+                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFF1F8E9))
                     )
                 } else {
                     Spacer(modifier = Modifier.width(1.dp))
@@ -605,8 +622,8 @@ fun DraggableKanbanCard(
                 if (targetStatusRight != null) {
                     AssistChip(
                         onClick = { onMoveStatus(targetStatusRight) },
-                        label = { Text("${if (targetStatusRight == TaskStatus.EN_PROGRESO) "Iniciar ▶" else "Completar ✅"}", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                        colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), labelColor = MaterialTheme.colorScheme.primary)
+                        label = { Text("${if (targetStatusRight == TaskStatus.EN_PROGRESO) "Iniciar ▶" else "Completar ✅"}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20)) },
+                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFE8F5E9))
                     )
                 }
             }

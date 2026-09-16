@@ -54,7 +54,7 @@ fun DashboardScreen(onLogout: () -> Unit) {
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier.width(280.dp),
-                drawerContainerColor = Color(0xFF5A714C)
+                drawerContainerColor = Color(0xFF1B5E20)
             ) {
                 Column(
                     modifier = Modifier
@@ -147,7 +147,7 @@ fun DashboardScreen(onLogout: () -> Unit) {
         }
 
         Scaffold(
-            containerColor = Color(0xFF5A714C),
+            containerColor = Color(0xFFF1F8E9), // Light background for entire app
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
@@ -170,10 +170,10 @@ fun DashboardScreen(onLogout: () -> Unit) {
                                 onDismissRequest = { showNotifications = false },
                                 modifier = Modifier
                                     .width(320.dp)
-                                    .background(Color(0xFF5A714C))
+                                    .background(Color.White) // White Dropdown
                                     .padding(8.dp)
                             ) {
-                                Text("Notificaciones", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp, start = 4.dp))
+                                Text("Notificaciones", color = Color(0xFF1C1C1E), fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(bottom = 8.dp, start = 4.dp))
                                 
                                 val notifications = listOf(
                                     "Se regó el cultivo de tomate" to false,
@@ -184,7 +184,7 @@ fun DashboardScreen(onLogout: () -> Unit) {
                                 notifications.forEach { (text, isAlert) ->
                                     Card(
                                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                        colors = CardDefaults.cardColors(containerColor = Color(0xFF6A8256)),
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F8E9)),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
                                         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -195,14 +195,14 @@ fun DashboardScreen(onLogout: () -> Unit) {
                                                 modifier = Modifier.size(24.dp)
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
-                                            Text(text, color = Color.White, fontSize = 14.sp)
+                                            Text(text, color = Color(0xFF1C1C1E), fontSize = 14.sp)
                                         }
                                     }
                                 }
                             }
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF5A714C))
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1B5E20)) // Dark Green Header
                 )
             }
         ) { paddingValues ->

@@ -54,7 +54,7 @@ fun FinanceScreen(personnelViewModel: PersonnelViewModel, financeViewModel: Fina
                 }
             }
         },
-        containerColor = Color(0xFFF1F8E9) // Clear pastel green
+        containerColor = Color(0xFFF1F8E9) // Ecosistema transparent / light background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -128,32 +128,46 @@ fun FinanceScreen(personnelViewModel: PersonnelViewModel, financeViewModel: Fina
 
                 // 3 Metrics Cards
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    MetricCard(title = "Ingresos", amount = totalIngresos, color = AppleGreen, modifier = Modifier.weight(1f))
+                    MetricCard(title = "Ingresos", amount = totalIngresos, color = Color(0xFF1B5E20), modifier = Modifier.weight(1f))
                     MetricCard(title = "Egresos", amount = totalEgresos, color = AppleRed, modifier = Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(8.dp))
-                MetricCard(title = "Balance Total", amount = balanceTotal, color = if (balanceTotal >= 0) AppleGreen else AppleRed, modifier = Modifier.fillMaxWidth())
+                MetricCard(title = "Balance Total", amount = balanceTotal, color = if (balanceTotal >= 0) Color(0xFF1B5E20) else AppleRed, modifier = Modifier.fillMaxWidth())
                 
                 Spacer(Modifier.height(16.dp))
 
-                // Action buttons
+                // Action buttons (Floating chips style)
                 val context = LocalContext.current
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = { financeViewModel.exportReport(finca.id, context) }, // Can replace with actual Excel logic if needed
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(20.dp)
-                    ) {
-                        Text("Subir Excel", color = MaterialTheme.colorScheme.onSecondary)
-                    }
-                    Button(
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Surface(
                         onClick = { financeViewModel.exportReport(finca.id, context) },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(24.dp),
+                        color = Color.White,
+                        shadowElevation = 4.dp
                     ) {
-                        Text("Descargar PDF", color = MaterialTheme.colorScheme.onSecondary)
+                        Row(
+                            modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Excel", color = Color(0xFF1C1C1E), fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    Surface(
+                        onClick = { financeViewModel.exportReport(finca.id, context) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(24.dp),
+                        color = Color.White,
+                        shadowElevation = 4.dp
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("PDF", color = Color(0xFF1C1C1E), fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
 
@@ -306,10 +320,11 @@ fun MetricCard(title: String, amount: Double, color: Color, modifier: Modifier =
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = title, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF1C1C1E), fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(4.dp))
             Text(
                 text = formatCurrency(amount),

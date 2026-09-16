@@ -68,9 +68,14 @@ fun MisPublicacionesScreen(
                 }
             }
         },
-        containerColor = AgroFlowBackground
+        containerColor = Color(0xFFF1F8E9)
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF1F8E9))
+                .padding(padding)
+        ) {
             if (fincaId == null) {
                 Text(
                     text = "Selecciona una finca en la pestaña Fincas para ver tus publicaciones.",
@@ -187,10 +192,10 @@ fun MiPublicacionItem(pub: Publicacion, onToggleState: (Boolean) -> Unit, onEdit
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = AgroFlowSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             if (!pub.imagenUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = pub.imagenUrl,
@@ -198,111 +203,111 @@ fun MiPublicacionItem(pub: Publicacion, onToggleState: (Boolean) -> Unit, onEdit
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
-                        .clip(RoundedCornerShape(16.dp)),
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                     contentScale = ContentScale.Crop
                 )
             } else {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(130.dp)
-                        .background(AgroFlowBackground, shape = RoundedCornerShape(16.dp)),
+                        .height(200.dp)
+                        .background(Color(0xFFE0E0E0), shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("🌾", style = MaterialTheme.typography.headlineLarge)
                 }
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = pub.tituloProducto,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = AppleDarkGrey
-                    )
-                    Text(
-                        text = "\$${pub.precio}",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = AgroFlowGreen
-                    )
-                    Text(
-                        text = "Disponibles: ${pub.cantidadDisponible}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = AppleTextSecondary
-                    )
-                    if (phone != null) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "📞 $phone",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = AppleDarkGrey
+                            text = pub.tituloProducto,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1B5E20)
                         )
+                        Text(
+                            text = "\$${pub.precio}",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = AgroFlowGreen
+                        )
+                        Text(
+                            text = "Disponibles: ${pub.cantidadDisponible}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AppleTextSecondary
+                        )
+                        if (phone != null) {
+                            Text(
+                                text = "📞 $phone",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = AppleDarkGrey
+                            )
+                        }
                     }
                 }
-            }
 
-            if (cleanDesc.isNotBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = cleanDesc,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = AppleDarkGrey.copy(alpha = 0.8f)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (cleanDesc.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (pub.estadoPublicacion == "ACTIVA") "ACTIVA" else "VENDIDO",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (pub.estadoPublicacion == "ACTIVA") AgroFlowGreen else AppleTextSecondary
-                    )
-                    Switch(
-                        checked = pub.estadoPublicacion == "ACTIVA",
-                        onCheckedChange = { onToggleState(it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = AgroFlowGreen,
-                            checkedTrackColor = AgroFlowGreen.copy(alpha = 0.3f)
-                        )
+                        text = cleanDesc,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AppleDarkGrey.copy(alpha = 0.8f)
                     )
                 }
                 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IconButton(onClick = onEdit, modifier = Modifier.background(AgroFlowBackground, RoundedCornerShape(8.dp)).size(40.dp)) {
-                        Text("✏️")
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = if (pub.estadoPublicacion == "ACTIVA") "ACTIVA" else "VENDIDO",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (pub.estadoPublicacion == "ACTIVA") AgroFlowGreen else AppleTextSecondary
+                        )
+                        Switch(
+                            checked = pub.estadoPublicacion == "ACTIVA",
+                            onCheckedChange = { onToggleState(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = AgroFlowGreen,
+                                checkedTrackColor = AgroFlowGreen.copy(alpha = 0.3f)
+                            )
+                        )
                     }
-                    IconButton(onClick = onDelete, modifier = Modifier.background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp)).size(40.dp)) {
-                        Text("🗑️")
+                    
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(onClick = onEdit, modifier = Modifier.background(AgroFlowBackground, RoundedCornerShape(8.dp)).size(40.dp)) {
+                            Text("✏️")
+                        }
+                        IconButton(onClick = onDelete, modifier = Modifier.background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp)).size(40.dp)) {
+                            Text("🗑️")
+                        }
                     }
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Button(
-                onClick = {
-                    val uri = Uri.parse("geo:0,0?q=${Uri.encode(location)}")
-                    val intent = Intent(Intent.ACTION_VIEW, uri)
-                    intent.setPackage("com.google.android.apps.maps")
-                    if (intent.resolveActivity(context.packageManager) != null) {
-                        context.startActivity(intent)
-                    } else {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, uri))
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = AppleBlue),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("📍 Ver Ubicación", color = Color.White)
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Button(
+                    onClick = {
+                        val uri = Uri.parse("geo:0,0?q=${Uri.encode(location)}")
+                        val intent = Intent(Intent.ACTION_VIEW, uri)
+                        intent.setPackage("com.google.android.apps.maps")
+                        if (intent.resolveActivity(context.packageManager) != null) {
+                            context.startActivity(intent)
+                        } else {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = AppleBlue),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("📍 Ver Ubicación", color = Color.White)
+                }
             }
         }
     }
@@ -366,7 +371,7 @@ fun CreatePublicacionDialog(
                     OutlinedTextField(
                         value = precio,
                         onValueChange = { precio = it },
-                        label = { Text("Precio (\$)", maxLines = 1) },
+                        label = { Text("Precio (\$)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                         colors = textFieldColors,
@@ -375,7 +380,7 @@ fun CreatePublicacionDialog(
                     OutlinedTextField(
                         value = cantidad,
                         onValueChange = { cantidad = it },
-                        label = { Text("Cantidad", maxLines = 1) },
+                        label = { Text("Cantidad") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                         colors = textFieldColors,
@@ -413,7 +418,7 @@ fun CreatePublicacionDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = AgroFlowGreen),
                     shape = RoundedCornerShape(20.dp)
                 ) {
-                    Text(if (imageUri != null) "Imagen seleccionada ✅" else "📸 Seleccionar Foto")
+                    Text(if (imageUri != null) "Imagen seleccionada ✅" else "📸 Seleccionar Foto", color = Color.White)
                 }
             }
         },
@@ -557,7 +562,7 @@ fun EditPublicacionDialog(
                     OutlinedTextField(
                         value = precio,
                         onValueChange = { precio = it },
-                        label = { Text("Precio (\$)", maxLines = 1) },
+                        label = { Text("Precio (\$)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                         colors = textFieldColors,
@@ -566,7 +571,7 @@ fun EditPublicacionDialog(
                     OutlinedTextField(
                         value = cantidad,
                         onValueChange = { cantidad = it },
-                        label = { Text("Cantidad", maxLines = 1) },
+                        label = { Text("Cantidad") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                         colors = textFieldColors,

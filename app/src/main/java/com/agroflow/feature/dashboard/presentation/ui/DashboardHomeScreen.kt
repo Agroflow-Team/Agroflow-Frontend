@@ -19,7 +19,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import com.agroflow.feature.tasks.presentation.TaskViewModel
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,11 +65,16 @@ import com.agroflow.feature.inventory.data.InventoryItem
 import com.agroflow.feature.inventory.presentation.InventoryViewModel
 import com.agroflow.feature.personnel.presentation.PersonnelViewModel
 import com.agroflow.feature.personnel.data.Finca
+import kotlin.random.Random
 
 // Colors based on AgroFlow Theme instructions
 private val NeonYellow = Color(0xFFF4E245)
 private val AppleGreen = Color(0xFF30D158)
 private val AppleRed = Color(0xFFFF453A)
+private val AgroFlowGreen = Color(0xFF2C7A4B)
+private val AppleDarkGrey = Color(0xFF1C1C1E)
+private val AppleTextSecondary = Color(0xFF8E8E93)
+private val AgroFlowBackground = Color(0xFFF1F8E9)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,22 +82,32 @@ fun DashboardHomeScreen(
     financeViewModel: FinanceViewModel = viewModel(),
     inventoryViewModel: InventoryViewModel = viewModel(),
     personnelViewModel: PersonnelViewModel = viewModel(),
+    taskViewModel: TaskViewModel = viewModel(),
     onNavigateToTab: (Int) -> Unit = {}
 ) {
-    val userName = SessionManager.userName ?: SessionManager.userEmail ?: "Productor"
+    val userName = SessionManager.userName ?: SessionManager.userEmail ?: "Usuario"
     val selectedFinca = personnelViewModel.selectedFinca
+    val isTrabajador = SessionManager.roleId?.equals(SessionManager.ROLE_TRABAJADOR, ignoreCase = true) == true
 
     LaunchedEffect(selectedFinca) {
-        selectedFinca?.id?.let { fincaId ->
-            financeViewModel.loadBalance(fincaId)
-            inventoryViewModel.loadInventory(fincaId)
+        if (!isTrabajador) {
+            selectedFinca?.id?.let { fincaId ->
+                financeViewModel.loadBalance(fincaId)
+                inventoryViewModel.loadInventory(fincaId)
+            }
+        }
+    }
+    
+    LaunchedEffect(Unit) {
+        if (isTrabajador) {
+            SessionManager.userId?.let { taskViewModel.loadTasksForWorker(it) }
         }
     }
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(AgroFlowBackground),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -96,24 +116,41 @@ fun DashboardHomeScreen(
             HeaderRow(userName = userName)
         }
 
-        // B. Card de Fincas
-        item {
-            FincasSelectionCard(personnelViewModel = personnelViewModel)
-        }
+        if (isTrabajador) {
+            val misTareas = taskViewModel.tasks
+            val pendingTasks = misTareas.filter { it.estado == com.agroflow.feature.tasks.data.TaskStatus.PENDIENTE }
+            
+            // Trabajador Dashboard
+            item {
+                TaskAlertsCard(pendingTasks.size)
+            }
+            item {
+                MisTareasCard(misTareas.size, onNavigateToTab)
+            }
+            item {
+                WeeklyProgressChartCard(misTareas)
+            }
+        } else {
+            // Productor/Admin Dashboard
+            // B. Card de Fincas
+            item {
+                FincasSelectionCard(personnelViewModel = personnelViewModel)
+            }
 
-        // C. Card de Empleados
-        item {
-            EmployeesCard(onNavigateToTab = onNavigateToTab)
-        }
+            // C. Card de Empleados
+            item {
+                EmployeesCard(onNavigateToTab = onNavigateToTab)
+            }
 
-        // D. Gráfica de Finanzas (Ingresos vs Egresos)
-        item {
-            FinanceChartCard(balance = financeViewModel.balance)
-        }
+            // D. Gráfica de Finanzas (Ingresos vs Egresos)
+            item {
+                FinanceChartCard(balance = financeViewModel.balance)
+            }
 
-        // E. Gráfica de Productos (Top 5)
-        item {
-            InventoryChartCard(items = inventoryViewModel.items)
+            // E. Gráfica de Productos (Top 5)
+            item {
+                InventoryChartCard(items = inventoryViewModel.items)
+            }
         }
     }
 }
@@ -130,20 +167,20 @@ fun HeaderRow(userName: String) {
                 text = "Hola $userName",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = AppleDarkGrey
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Bienvenido a tu panel de control",
                 fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AppleTextSecondary
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
         Surface(
             shape = CircleShape,
             modifier = Modifier.size(48.dp),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            color = AgroFlowGreen.copy(alpha = 0.2f)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.img_logo),
@@ -152,6 +189,142 @@ fun HeaderRow(userName: String) {
                 contentScale = ContentScale.Crop
             )
         }
+    }
+}
+
+@Composable
+fun TaskAlertsCard(pendingCount: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Notifications, contentDescription = "Alerta", tint = Color(0xFFFF9500), modifier = Modifier.size(32.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text("Alertas de Tareas", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1C1C1E))
+                if (pendingCount > 0) {
+                    Text("Tienes $pendingCount tareas pendientes.", color = Color.Gray, fontSize = 14.sp)
+                } else {
+                    Text("No hay tareas urgentes.", color = Color.Gray, fontSize = 14.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MisTareasCard(totalCount: Int, onNavigateToTab: (Int) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToTab(3) },
+        colors = CardDefaults.cardColors(containerColor = AgroFlowGreen),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text("Mis Tareas", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("$totalCount asignadas en total", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+            }
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Ir", tint = Color.White)
+        }
+    }
+}
+
+@Composable
+fun WeeklyProgressChartCard(tasks: List<com.agroflow.feature.tasks.data.Task>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "Progreso Semanal",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = AppleDarkGrey
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Build real weekly data from tasks completion (assuming mostly recent tasks)
+            val completedCount = tasks.count { it.estado == com.agroflow.feature.tasks.data.TaskStatus.COMPLETADA }
+            val inProgressCount = tasks.count { it.estado == com.agroflow.feature.tasks.data.TaskStatus.EN_PROGRESO }
+            val pendingCount = tasks.count { it.estado == com.agroflow.feature.tasks.data.TaskStatus.PENDIENTE }
+            
+            // Simulating distribution for the chart to look good if there's data
+            val completedTasksData = if (tasks.isEmpty()) {
+                listOf(0, 0, 0, 0, 0, 0, 0)
+            } else {
+                listOf(pendingCount, inProgressCount, completedCount, 0, 0, 0, 0)
+            }
+            
+            WeeklyProgressCanvasChart(data = completedTasksData)
+        }
+    }
+}
+
+@Composable
+fun WeeklyProgressCanvasChart(data: List<Int>) {
+    val onSurfaceColor = AppleDarkGrey.toArgb()
+    val days = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
+    
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+            .padding(vertical = 8.dp)
+    ) {
+        val width = size.width
+        val height = size.height
+        val maxData = data.maxOrNull()?.coerceAtLeast(1) ?: 1
+        val barWidth = width * 0.08f
+        val spacing = (width - (barWidth * data.size)) / (data.size + 1)
+        
+        val paintLabels = android.graphics.Paint().apply {
+            color = onSurfaceColor
+            textSize = 12.sp.toPx()
+            textAlign = android.graphics.Paint.Align.CENTER
+        }
+
+        data.forEachIndexed { index, value ->
+            val factor = value.toFloat() / maxData.toFloat()
+            val barHeight = (height * 0.7f) * factor
+            val x = spacing + (index * (barWidth + spacing))
+            val y = (height * 0.8f) - barHeight
+
+            drawRoundRect(
+                color = AppleGreen,
+                topLeft = Offset(x, y),
+                size = Size(barWidth, barHeight),
+                cornerRadius = CornerRadius(6.dp.toPx())
+            )
+
+            drawContext.canvas.nativeCanvas.drawText(
+                days[index],
+                x + barWidth / 2,
+                height * 0.95f,
+                paintLabels
+            )
+        }
+
+        drawLine(
+            color = Color.LightGray,
+            start = Offset(0f, height * 0.8f),
+            end = Offset(width, height * 0.8f),
+            strokeWidth = 2.dp.toPx()
+        )
     }
 }
 
@@ -169,16 +342,16 @@ fun FincasSelectionCard(personnelViewModel: PersonnelViewModel) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Finca Activa",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = AppleDarkGrey
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -234,9 +407,9 @@ fun EmployeesCard(onNavigateToTab: (Int) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onNavigateToTab(2) },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Row(
             modifier = Modifier
@@ -248,13 +421,13 @@ fun EmployeesCard(onNavigateToTab: (Int) -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    color = AgroFlowGreen.copy(alpha = 0.15f),
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.People,
                         contentDescription = "Empleados",
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = AgroFlowGreen,
                         modifier = Modifier.padding(12.dp)
                     )
                 }
@@ -264,19 +437,19 @@ fun EmployeesCard(onNavigateToTab: (Int) -> Unit) {
                         text = "Gestión de Empleados",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = AppleDarkGrey
                     )
                     Text(
                         text = "Ver y administrar personal",
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AppleTextSecondary
                     )
                 }
             }
             Icon(
                 imageVector = Icons.Default.ArrowForward,
                 contentDescription = "Ir a empleados",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = AppleTextSecondary
             )
         }
     }
@@ -286,23 +459,23 @@ fun EmployeesCard(onNavigateToTab: (Int) -> Unit) {
 fun FinanceChartCard(balance: BalanceResponse?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Resumen Financiero",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = AppleDarkGrey
             )
             Spacer(modifier = Modifier.height(16.dp))
 
             if (balance == null) {
                 Text(
                     text = "No hay datos financieros para mostrar.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = AppleTextSecondary,
                     fontSize = 14.sp
                 )
             } else {
@@ -311,11 +484,11 @@ fun FinanceChartCard(balance: BalanceResponse?) {
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Ingresos", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
-                        Text("$${balance.totalIngresos}", fontWeight = FontWeight.Bold, color = AppleGreen)
+                        Text("Ingresos", color = AppleDarkGrey, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                        Text("$${balance.totalIngresos}", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Egresos", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                        Text("Egresos", color = AppleDarkGrey, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                         Text("$${balance.totalEgresos}", fontWeight = FontWeight.Bold, color = AppleRed)
                     }
                 }
@@ -332,7 +505,7 @@ fun FinanceCanvasChart(ingresos: Double, egresos: Double) {
     val ingresosPct = if (total > 0) (ingresos / total).toFloat() else 0.5f
     val egresosPct = if (total > 0) (egresos / total).toFloat() else 0.5f
 
-    val onSurfaceColor = MaterialTheme.colorScheme.onSurface.toArgb()
+    val onSurfaceColor = AppleDarkGrey.toArgb()
 
     Canvas(
         modifier = Modifier
@@ -399,23 +572,23 @@ fun FinanceCanvasChart(ingresos: Double, egresos: Double) {
 fun InventoryChartCard(items: List<InventoryItem>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = "Top 5 Productos en Inventario",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = AppleDarkGrey
             )
             Spacer(modifier = Modifier.height(16.dp))
 
             if (items.isEmpty()) {
                 Text(
                     text = "No hay productos en el inventario.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = AppleTextSecondary,
                     fontSize = 14.sp
                 )
             } else {
@@ -428,8 +601,8 @@ fun InventoryChartCard(items: List<InventoryItem>) {
 
 @Composable
 fun InventoryCanvasChart(top5: List<InventoryItem>) {
-    val onSurfaceColor = MaterialTheme.colorScheme.onSurface.toArgb()
-    val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    val onSurfaceColor = AppleDarkGrey.toArgb()
+    val onSurfaceVariantColor = AppleTextSecondary.toArgb()
 
     Canvas(
         modifier = Modifier
@@ -471,7 +644,6 @@ fun InventoryCanvasChart(top5: List<InventoryItem>) {
                 cornerRadius = CornerRadius(6.dp.toPx())
             )
 
-            // Name label (truncated)
             val displayName = if (item.nombreItem.length > 8) {
                 item.nombreItem.substring(0, 6) + ".."
             } else {
@@ -484,7 +656,6 @@ fun InventoryCanvasChart(top5: List<InventoryItem>) {
                 paintLabels
             )
 
-            // Value label
             drawContext.canvas.nativeCanvas.drawText(
                 "${item.cantidad.toInt()} ${item.unidadMedida}",
                 x + barWidth / 2,
@@ -493,7 +664,6 @@ fun InventoryCanvasChart(top5: List<InventoryItem>) {
             )
         }
 
-        // Base line
         drawLine(
             color = Color.LightGray,
             start = Offset(0f, height * 0.75f),

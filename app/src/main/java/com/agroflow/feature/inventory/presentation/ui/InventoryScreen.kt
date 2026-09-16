@@ -34,6 +34,7 @@ import com.agroflow.feature.personnel.presentation.PersonnelViewModel
 @Composable
 fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: InventoryViewModel = viewModel()) {
     val finca = personnelViewModel.selectedFinca
+    val isTrabajador = SessionManager.roleId?.equals(SessionManager.ROLE_TRABAJADOR, ignoreCase = true) == true
 
     LaunchedEffect(finca) {
         if (finca != null) {
@@ -47,7 +48,7 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
 
     Scaffold(
         floatingActionButton = {
-            if (finca != null && SessionManager.roleId != SessionManager.ROLE_TRABAJADOR) {
+            if (finca != null && !isTrabajador) {
                 FloatingActionButton(
                     onClick = { showCreateDialog = true },
                     containerColor = Color(0xFF388E3C),
@@ -108,7 +109,7 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { itemToEdit = item },
+                            .clickable { if (!isTrabajador) itemToEdit = item },
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -153,21 +154,31 @@ fun InventoryScreen(personnelViewModel: PersonnelViewModel, inventoryViewModel: 
 
                             Spacer(Modifier.height(12.dp))
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceEvenly
-                            ) {
-                                IconButton(
-                                    onClick = { itemToEdit = item },
-                                    modifier = Modifier.size(36.dp)
+                            if (isTrabajador) {
+                                Button(
+                                    onClick = { /* Acción de Usar */ },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C)),
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color(0xFF388E3C))
+                                    Text("Usar", color = Color.White)
                                 }
-                                IconButton(
-                                    onClick = { itemToDelete = item },
-                                    modifier = Modifier.size(36.dp)
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFFF453A))
+                                    IconButton(
+                                        onClick = { itemToEdit = item },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color(0xFF388E3C))
+                                    }
+                                    IconButton(
+                                        onClick = { itemToDelete = item },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFFF453A))
+                                    }
                                 }
                             }
                         }

@@ -51,7 +51,7 @@ fun SalesScreen(
                 }
             }
         },
-        containerColor = Color(0xFFF1F8E9) // Light pastel green background
+        containerColor = Color(0xFFF1F8E9) // Ecosistema transparent / light background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -102,19 +102,21 @@ fun SalesScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "Total Ventas",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF1C1C1E),
+                            fontWeight = FontWeight.SemiBold
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = formatCurrency(totalSales),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF30D158) // Apple Green
+                            color = Color(0xFF1B5E20) // Ecosistema green
                         )
                     }
                 }

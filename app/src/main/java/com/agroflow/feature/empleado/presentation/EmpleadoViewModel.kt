@@ -51,6 +51,9 @@ class EmpleadoViewModel(application: Application) : AndroidViewModel(application
     var actualTrabajadorId by mutableStateOf<String?>(null)
         private set
 
+    var lastError by mutableStateOf<String?>(null)
+        private set
+
     fun loadTasks() {
         val workerId = SessionManager.userId ?: return
         viewModelScope.launch {
@@ -96,9 +99,46 @@ class EmpleadoViewModel(application: Application) : AndroidViewModel(application
                 android.util.Log.e("EmpleadoVM", "Error al consultar fincas: ${e.message}")
             }
 
-            // 3. Cargar las tareas usando el ID correcto
-            tasks = taskRepository.getTasksByWorker(targetTrabajadorId)
-            
+            try {
+                // 3. Cargar las tareas usando el ID correcto desde el Repositorio (Room + API)
+                val fetchedTasks = taskRepository.getTasksByWorker(targetTrabajadorId)
+                
+                if (fetchedTasks.isEmpty() && targetTrabajadorId != workerId) {
+                    val fallback = taskRepository.getTasksByWorker(workerId)
+                    tasks = if (fallback.isNotEmpty()) fallback else fetchedTasks
+                } else {
+                    tasks = fetchedTasks
+                }
+                
+                // 4. Si TODAVA est vaco, hagamos un fallback conectndonos directo al Finca API para ver si las tareas se crearon mal
+                if (tasks.isEmpty() && currentFincaId != null) {
+                    val response = com.agroflow.core.RetrofitClient.taskApi.getTasksByFinca(currentFincaId!!)
+                    if (response.isSuccessful) {
+                        val allFincaTasks = response.body() ?: emptyList()
+                        // Filtramos las que le pertenezcan al usuario
+                        val myTasks = allFincaTasks.filter { 
+                            it.trabajadorId.equals(targetTrabajadorId, ignoreCase = true) || 
+                            it.trabajadorId.equals(workerId, ignoreCase = true)
+                        }
+                        if (myTasks.isNotEmpty()) {
+                            tasks = myTasks
+                            lastError = "Tareas recuperadas desde la nube Finca API."
+                        } else if (allFincaTasks.isNotEmpty()) {
+                            // S hay tareas en la finca, pero con OTRO ID de trabajador!
+                            lastError = "Hay tareas en la finca, pero estn asignadas a otro ID. (Tu ID: $targetTrabajadorId)"
+                        } else {
+                            lastError = "No hay tareas en la finca ni para ti. (ID: $targetTrabajadorId)"
+                        }
+                    }
+                } else if (tasks.isEmpty()) {
+                    lastError = "No se encontraron tareas para el trabajador (ID: $targetTrabajadorId)"
+                } else {
+                    lastError = null
+                }
+            } catch (e: Exception) {
+                lastError = "Error loading tasks: ${e.message}"
+            }
+
             totalHorasTrabajadas = tasks.filter { it.estado == TaskStatus.COMPLETADA }
                 .sumOf { it.horasEfectivas }
             
