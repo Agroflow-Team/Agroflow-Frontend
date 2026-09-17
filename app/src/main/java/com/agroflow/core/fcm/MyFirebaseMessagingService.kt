@@ -46,7 +46,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val channelId = "agroflow_tasks_channel"
+        val channelId = "agroflow_tasks_channel_v2"
         val brandColor = 0xFF2E7D32.toInt() // Verde AgroFlow
 
         // Estilo expandible enriquecido
@@ -66,6 +66,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_EVENT)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setVibrate(longArrayOf(0, 250, 150, 250))
             .addAction(
                 android.R.drawable.ic_menu_view,
                 "Ver en AgroFlow",
@@ -91,17 +92,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             manager.createNotificationChannel(channel)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (androidx.core.content.ContextCompat.checkSelfPermission(
-                    this,
-                    android.Manifest.permission.POST_NOTIFICATIONS
-                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
-            ) {
-                // Permission not granted, cannot show notification
-                return
-            }
+        try {
+            manager.notify(Random.nextInt(1000, 9999), builder.build())
+        } catch (e: Exception) {
+            android.util.Log.e("MyFirebaseMessaging", "Error mostrando notificación: ${e.message}")
         }
-
-        manager.notify(Random.nextInt(1000, 9999), builder.build())
     }
 }
