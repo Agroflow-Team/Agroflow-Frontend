@@ -17,7 +17,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         // Sincronizar token automáticamente con el backend si hay sesión iniciada
-        FcmHelper.syncTokenDirectly(token)
+        com.agroflow.core.fcm.FcmHelper.syncTokenDirectly(token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
@@ -56,7 +56,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .bigText(message)
 
         val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(com.agroflow.R.mipmap.ic_launcher)
+            .setSmallIcon(com.agroflow.R.drawable.ic_notification)
             .setColor(brandColor)
             .setContentTitle("🌾 $title")
             .setContentText(message)
@@ -89,6 +89,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }
             manager.createNotificationChannel(channel)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                // Permission not granted, cannot show notification
+                return
+            }
         }
 
         manager.notify(Random.nextInt(1000, 9999), builder.build())
