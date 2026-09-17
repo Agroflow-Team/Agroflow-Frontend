@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -137,9 +138,14 @@ fun DashboardHomeScreen(
                 FincasSelectionCard(personnelViewModel = personnelViewModel)
             }
 
-            // C. Card de Empleados
+            // Gestion de Empleados
             item {
-                EmployeesCard(onNavigateToTab = onNavigateToTab)
+                EmployeesCard(onNavigateToTab)
+            }
+            
+            // Gestion de Tareas
+            item {
+                TaskManagementCard(onNavigateToTab)
             }
 
             // D. Gráfica de Finanzas (Ingresos vs Egresos)
@@ -447,8 +453,58 @@ fun EmployeesCard(onNavigateToTab: (Int) -> Unit) {
                 }
             }
             Icon(
-                imageVector = Icons.Default.ArrowForward,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "Ir a empleados",
+                tint = AppleTextSecondary
+            )
+        }
+    }
+}
+
+@Composable
+fun TaskManagementCard(onNavigateToTab: (Int) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToTab(2) }, // Tab 2 is likely Tareas
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(AgroFlowGreen.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("📋", fontSize = 24.sp)
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "Gestión de Tareas",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AppleDarkGrey
+                    )
+                    Text(
+                        text = "Ver y asignar tareas al personal",
+                        fontSize = 14.sp,
+                        color = AppleTextSecondary
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Ir a tareas",
                 tint = AppleTextSecondary
             )
         }

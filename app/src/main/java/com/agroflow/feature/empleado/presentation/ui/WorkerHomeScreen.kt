@@ -152,13 +152,11 @@ fun WorkerHomeScreen(viewModel: EmpleadoViewModel, onNavigateToTasks: () -> Unit
                     val inProgressCount = misTareas.count { it.estado == TaskStatus.EN_PROGRESO }
                     val pendingCount = pendingTasks.size
                     
-                    val completedTasksData = if (misTareas.isEmpty()) {
-                        listOf(0, 0, 0, 0, 0, 0, 0)
-                    } else {
-                        listOf(pendingCount, inProgressCount, completedCount, 0, 0, 0, 0)
-                    }
-                    
-                    WeeklyProgressCanvasChart(data = completedTasksData)
+                    TaskPieChart(
+                        completed = completedCount,
+                        inProgress = inProgressCount,
+                        pending = pendingCount
+                    )
                 }
             }
         }
@@ -166,52 +164,57 @@ fun WorkerHomeScreen(viewModel: EmpleadoViewModel, onNavigateToTasks: () -> Unit
 }
 
 @Composable
-fun WeeklyProgressCanvasChart(data: List<Int>) {
-    val onSurfaceColor = AppleDarkGrey.toArgb()
-    val days = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
-    
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp)
-            .padding(vertical = 8.dp)
+fun TaskPieChart(completed: Int, inProgress: Int, pending: Int) {
+    val total = completed + inProgress + pending
+    if (total == 0) {
+        Box(modifier = Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) {
+            Text("No hay tareas asignadas", color = Color.Gray)
+        }
+        return
+    }
+
+    val completedAngle = (completed.toFloat() / total) * 360f
+    val inProgressAngle = (inProgress.toFloat() / total) * 360f
+    val pendingAngle = (pending.toFloat() / total) * 360f
+
+    val completedColor = Color(0xFF34C759) // Verde
+    val inProgressColor = Color(0xFF007AFF) // Azul
+    val pendingColor = Color(0xFFFF9500) // Naranja
+
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround
     ) {
-        val width = size.width
-        val height = size.height
-
-        val maxVal = data.maxOrNull() ?: 1
-        val safeMaxVal = if (maxVal > 0) maxVal else 1
-
-        val barWidth = (width * 0.5f) / data.size
-        val spacing = (width * 0.5f) / (data.size + 1)
-
-        val paint = android.graphics.Paint().apply {
-            color = onSurfaceColor
-            textSize = 12.sp.toPx()
-            textAlign = android.graphics.Paint.Align.CENTER
-        }
-
-        data.forEachIndexed { index, value ->
-            val factor = (value.toFloat() / safeMaxVal)
-            val barHeight = (height * 0.7f) * factor
-            val x = spacing + (index * (barWidth + spacing))
-            val y = (height * 0.75f) - barHeight
-
-            if (barHeight > 0) {
-                drawRoundRect(
-                    color = AgroFlowGreen,
-                    topLeft = Offset(x, y),
-                    size = Size(barWidth, barHeight),
-                    cornerRadius = CornerRadius(4.dp.toPx())
-                )
+        Canvas(modifier = Modifier.size(120.dp)) {
+            var startAngle = -90f
+            
+            if (completed > 0) {
+                drawArc(color = completedColor, startAngle = startAngle, sweepAngle = completedAngle, useCenter = true)
+                startAngle += completedAngle
             }
-
-            drawContext.canvas.nativeCanvas.drawText(
-                days[index],
-                x + barWidth / 2,
-                height * 0.95f,
-                paint
-            )
+            if (inProgress > 0) {
+                drawArc(color = inProgressColor, startAngle = startAngle, sweepAngle = inProgressAngle, useCenter = true)
+                startAngle += inProgressAngle
+            }
+            if (pending > 0) {
+                drawArc(color = pendingColor, startAngle = startAngle, sweepAngle = pendingAngle, useCenter = true)
+            }
         }
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LegendItem(color = completedColor, text = "Completadas ($completed)")
+            LegendItem(color = inProgressColor, text = "En Proceso ($inProgress)")
+            LegendItem(color = pendingColor, text = "Pendientes ($pending)")
+        }
+    }
+}
+
+@Composable
+fun LegendItem(color: Color, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(12.dp).background(color, CircleShape))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text, fontSize = 14.sp, color = AppleDarkGrey)
     }
 }

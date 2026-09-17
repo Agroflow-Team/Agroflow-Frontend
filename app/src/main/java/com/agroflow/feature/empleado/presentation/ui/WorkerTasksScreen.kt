@@ -105,22 +105,48 @@ fun WorkerTasksScreen(viewModel: EmpleadoViewModel) {
     }
 
     if (showDialog && selectedTask != null && targetStatus != null) {
+        var horasText by remember { androidx.compose.runtime.mutableStateOf("") }
+        var novedadesText by remember { androidx.compose.runtime.mutableStateOf("") }
+        val currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Mover Tarea") },
-            text = { Text("¿Deseas mover '${selectedTask?.titulo}' a ${targetStatus?.name}?") },
+            title = { Text(if (targetStatus == TaskStatus.COMPLETADA) "Completar Tarea" else "Mover Tarea") },
+            text = { 
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Mover '${selectedTask?.titulo}' a ${targetStatus?.name}")
+                    if (targetStatus == TaskStatus.COMPLETADA) {
+                        OutlinedTextField(
+                            value = horasText,
+                            onValueChange = { horasText = it },
+                            label = { Text("Horas Trabajadas") },
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    OutlinedTextField(
+                        value = novedadesText,
+                        onValueChange = { novedadesText = it },
+                        label = { Text("Novedades / Comentarios") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text("Fecha de registro: $currentDate", color = Color.Gray, fontSize = 12.sp)
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {
-                        val hours = if (targetStatus == TaskStatus.COMPLETADA) 2.0 else 0.0 // Default or logic
-                        viewModel.updateTaskProgress(selectedTask!!.id!!, hours, "Actualizado por trabajador", null, targetStatus!!) {
+                        val hours = horasText.toDoubleOrNull() ?: 0.0
+                        val finalNovedades = "[$currentDate] $novedadesText"
+                        
+                        viewModel.updateTaskProgress(selectedTask!!.id!!, hours, finalNovedades, null, targetStatus!!) {
                             viewModel.loadTasks() // recargar
                         }
                         showDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C7A4B))
                 ) {
-                    Text("Mover")
+                    Text(if (targetStatus == TaskStatus.COMPLETADA) "Completar" else "Mover")
                 }
             },
             dismissButton = {

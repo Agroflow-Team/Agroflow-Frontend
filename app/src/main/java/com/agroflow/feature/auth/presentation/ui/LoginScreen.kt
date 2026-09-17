@@ -111,7 +111,7 @@ fun LoginScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.logo_agroflow),
+                        painter = painterResource(id = R.drawable.img_logo),
                         contentDescription = "Logo",
                         modifier = Modifier
                             .size(90.dp)

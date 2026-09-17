@@ -28,6 +28,16 @@ data class UpdateUserRequest(
     val correo: String? = null
 )
 
+data class UserProfileResponse(
+    val id: String,
+    val correo: String,
+    val rolId: String,
+    val nombre: String?,
+    val telefono: String?,
+    val direccion: String?,
+    val fotoPerfilUrl: String?
+)
+
 interface UserApiService {
     @POST("api/users/cliente")
     suspend fun createCliente(@Body request: CreateUserRequest): Response<CreateUserResponse>
@@ -40,4 +50,7 @@ interface UserApiService {
 
     @PUT("api/users/{id}")
     suspend fun updateUser(@Path("id") id: String, @Body request: UpdateUserRequest): Response<Void>
+
+    @retrofit2.http.GET("api/users/{id}")
+    suspend fun getUserProfile(@Path("id") id: String): Response<UserProfileResponse>
 }

@@ -57,6 +57,22 @@ class AuthViewModel : ViewModel() {
                             roleId = body.rolId,
                             token = body.token
                         )
+                        
+                        // Load Profile Data
+                        try {
+                            val profileResponse = RetrofitClient.userApi.getUserProfile(body.usuarioId)
+                            if (profileResponse.isSuccessful) {
+                                val p = profileResponse.body()
+                                if (p != null) {
+                                    com.agroflow.core.session.SessionManager.userName = p.nombre
+                                    com.agroflow.core.session.SessionManager.userPhone = p.telefono
+                                    com.agroflow.core.session.SessionManager.userAddress = p.direccion
+                                    com.agroflow.core.session.SessionManager.userPhotoUri = p.fotoPerfilUrl
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("AgroFlowLogin", "Error cargando perfil: ${e.message}")
+                        }
                     }
                     uiState = LoginUiState.Success
                 } else {

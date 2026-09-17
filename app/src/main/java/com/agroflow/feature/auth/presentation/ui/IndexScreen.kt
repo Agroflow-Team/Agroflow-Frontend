@@ -163,7 +163,7 @@ fun IndexScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.logo_agroflow),
+                painter = painterResource(id = R.drawable.img_logo),
                 contentDescription = "Logo AgroFlow",
                 modifier = Modifier
                     .size(100.dp)
