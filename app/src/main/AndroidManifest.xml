@@ -36,7 +36,7 @@
         </service>
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="agroflow_tasks_channel" />
+            android:value="agroflow_tasks_channel_v2" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notification" />

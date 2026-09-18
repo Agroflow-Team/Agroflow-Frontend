@@ -19,21 +19,54 @@ import com.agroflow.feature.auth.presentation.ui.RecoverPasswordScreen
 enum class NavScreen { LANDING, LOGIN, RECOVER_PASSWORD, REGISTRO_CLIENTE, DASHBOARD, ADMIN_MANAGE_USERS }
 
 class MainActivity : ComponentActivity() {
+    
+    private val notificationPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            android.util.Log.d("AgroFlow", "Permiso de notificaciones concedido")
+        } else {
+            android.util.Log.w("AgroFlow", "Permiso de notificaciones denegado por el usuario")
+        }
+        // Sincronizar token FCM independientemente del permiso
+        // (el backend necesita el token para cuando el usuario reactive las notificaciones)
+        if (com.agroflow.core.session.SessionManager.isLoggedIn()) {
+            com.agroflow.core.fcm.FcmHelper.syncFcmTokenWithBackend()
+        }
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         // Inicializar SessionManager para persistir la sesin en SharedPreferences
         com.agroflow.core.session.SessionManager.init(this)
         
+        // Solicitar permiso de notificaciones en Android 13+ usando el API moderno
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                androidx.core.app.ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+            when {
+                androidx.core.content.ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.POST_NOTIFICATIONS
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED -> {
+                    // Permiso ya concedido, sincronizar token
+                    if (SessionManager.isLoggedIn()) {
+                        com.agroflow.core.fcm.FcmHelper.syncFcmTokenWithBackend()
+                    }
+                }
+                shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS) -> {
+                    // El usuario denegó antes, pero podemos mostrar explicación
+                    // Mostrar el diálogo de permiso de todas formas
+                    notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+                else -> {
+                    // Primera vez o nunca preguntado
+                    notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
             }
-        }
-
-        // Sincronizar token de Firebase automáticamente si el usuario ya tiene sesión iniciada
-        if (SessionManager.isLoggedIn()) {
-            com.agroflow.core.fcm.FcmHelper.syncFcmTokenWithBackend()
+        } else {
+            // Android < 13 no necesita permiso explícito, sincronizar directamente
+            if (SessionManager.isLoggedIn()) {
+                com.agroflow.core.fcm.FcmHelper.syncFcmTokenWithBackend()
+            }
         }
         
         enableEdgeToEdge()

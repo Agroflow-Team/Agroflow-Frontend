@@ -21,7 +21,14 @@ class AgroFlowApplication : Application() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channelId = "agroflow_tasks_channel"
+            val manager = getSystemService(NotificationManager::class.java)
+            
+            // Eliminar canal viejo si existe para evitar confusión
+            try {
+                manager.deleteNotificationChannel("agroflow_tasks_channel")
+            } catch (_: Exception) { }
+            
+            val channelId = "agroflow_tasks_channel_v2"
             val channelName = "AgroFlow - Tareas y Alertas"
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(channelId, channelName, importance).apply {
@@ -33,7 +40,6 @@ class AgroFlowApplication : Application() {
                 setShowBadge(true)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }
-            val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
     }
